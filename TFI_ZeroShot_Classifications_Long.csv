@@ -1,0 +1,201 @@
+"QuestionID","Item","IntendedDomain","Predicted_Domain","Confidence"
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Auditory",0.342410743236542
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Cognitive",0.245012059807777
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Sense of Control",0.137801736593246
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Intrusive",0.100990630686283
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Quality of Life",0.0893303230404854
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Emotional",0.0415949076414108
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Relaxation",0.0268246773630381
+1,"What percentage of your time awake were you consciously aware of your tinnitus?","Intrusive","Sleep",0.0160349141806364
+2,"How strong or loud was your tinnitus?","Intrusive","Auditory",0.327741682529449
+2,"How strong or loud was your tinnitus?","Intrusive","Intrusive",0.198510348796844
+2,"How strong or loud was your tinnitus?","Intrusive","Sense of Control",0.143470510840416
+2,"How strong or loud was your tinnitus?","Intrusive","Quality of Life",0.120491877198219
+2,"How strong or loud was your tinnitus?","Intrusive","Cognitive",0.101000502705574
+2,"How strong or loud was your tinnitus?","Intrusive","Emotional",0.0512456521391869
+2,"How strong or loud was your tinnitus?","Intrusive","Relaxation",0.0321665033698082
+2,"How strong or loud was your tinnitus?","Intrusive","Sleep",0.0253729075193405
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Auditory",0.301454246044159
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Intrusive",0.228168934583664
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Quality of Life",0.13544574379921
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Sense of Control",0.117696270346642
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Cognitive",0.0959638133645058
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Emotional",0.0911007970571518
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Relaxation",0.016372399404645
+3,"What percentage of your time awake were you annoyed by your tinnitus?","Intrusive","Sleep",0.0137978214770555
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Sense of Control",0.454070210456848
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Auditory",0.186028972268105
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Quality of Life",0.129884466528893
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Cognitive",0.0938183218240738
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Intrusive",0.0483641661703587
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Emotional",0.0438409745693207
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Relaxation",0.0316262915730476
+4,"Did you feel in control in regard to your tinnitus?","Sense of Control","Sleep",0.0123666124418378
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Sense of Control",0.237839475274086
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Auditory",0.228115260601044
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Quality of Life",0.173867017030716
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Intrusive",0.123215191066265
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Cognitive",0.109264440834522
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Emotional",0.0720640122890472
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Relaxation",0.0369476713240147
+5,"How easy was it for you to cope with your tinnitus?","Sense of Control","Sleep",0.0186869781464338
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Sense of Control",0.241766691207886
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Auditory",0.23000206053257
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Quality of Life",0.178549289703369
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Cognitive",0.126594513654709
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Intrusive",0.095118410885334
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Relaxation",0.0601365007460117
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Emotional",0.052579652518034
+6,"How easy was it for you to ignore your tinnitus?","Sense of Control","Sleep",0.0152528677135706
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Intrusive",0.297525644302368
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Auditory",0.244683757424355
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Sense of Control",0.175890848040581
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Quality of Life",0.126896068453789
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Cognitive",0.0568711943924427
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Emotional",0.0403848960995674
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Relaxation",0.0385196730494499
+7,"How much did your tinnitus interfere with your ability to concentrate?","Cognitive","Sleep",0.0192279852926731
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Intrusive",0.295024991035461
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Auditory",0.215789496898651
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Quality of Life",0.161535009741783
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Sense of Control",0.155374690890312
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Cognitive",0.0902560949325562
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Emotional",0.0361905917525291
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Relaxation",0.029412068426609
+8,"How much did your tinnitus interfere with your ability to think clearly?","Cognitive","Sleep",0.0164170507341623
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Intrusive",0.412089914083481
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Auditory",0.207135170698166
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Sense of Control",0.114521898329258
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Quality of Life",0.0940021201968193
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Cognitive",0.0791623219847679
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Emotional",0.0358227342367172
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Relaxation",0.0348288156092167
+9,"How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?","Cognitive","Sleep",0.0224369764328003
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Intrusive",0.283776104450226
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Quality of Life",0.170691817998886
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Auditory",0.170580953359604
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Sense of Control",0.128296941518784
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Sleep",0.0946802049875259
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Cognitive",0.0673320889472961
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Emotional",0.0503451339900494
+10,"How often did your tinnitus make it difficult to fall asleep or stay asleep?","Sleep","Relaxation",0.0342967584729195
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Sleep",0.227901950478554
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Quality of Life",0.215334370732307
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Intrusive",0.174222111701965
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Auditory",0.139297336339951
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Sense of Control",0.11994032561779
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Cognitive",0.0552123449742794
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Emotional",0.0390315651893616
+11,"How often did your tinnitus cause you difficulty in getting as much sleep as you needed?","Sleep","Relaxation",0.0290599875152111
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Quality of Life",0.251380294561386
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Intrusive",0.198108941316605
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Sleep",0.159228473901749
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Auditory",0.129133149981499
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Sense of Control",0.0937732309103012
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Relaxation",0.0929753631353378
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Cognitive",0.0381467118859291
+12,"How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?","Sleep","Emotional",0.0372538380324841
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Intrusive",0.277565836906433
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Auditory",0.251293122768402
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Quality of Life",0.17885933816433
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Sense of Control",0.143934339284897
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Cognitive",0.0553892999887466
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Emotional",0.0440057367086411
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Relaxation",0.0301228296011686
+13,"How much has your tinnitus interfered with your ability to hear clearly?","Auditory","Sleep",0.0188294667750597
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Auditory",0.29431626200676
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Intrusive",0.269209235906601
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Quality of Life",0.139517948031425
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Sense of Control",0.131594851613045
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Emotional",0.0610456988215446
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Cognitive",0.0527941770851612
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Relaxation",0.0285047739744186
+14,"How much has your tinnitus interfered with your ability to understand people who are talking?","Auditory","Sleep",0.0230170581489801
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Intrusive",0.305102199316025
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Auditory",0.230704739689827
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Quality of Life",0.166614904999733
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Sense of Control",0.138377204537392
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Cognitive",0.061051931232214
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Emotional",0.0552557595074177
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Relaxation",0.0257345680147409
+15,"How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?","Auditory","Sleep",0.0171587057411671
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Intrusive",0.266437560319901
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Relaxation",0.255595862865448
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Auditory",0.127193421125412
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Sleep",0.121514335274696
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Sense of Control",0.0866946056485176
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Quality of Life",0.0844251662492752
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Emotional",0.0299360193312168
+16,"How much has your tinnitus interfered with your quiet resting activities?","Relaxation","Cognitive",0.0282030571252108
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Relaxation",0.367373019456863
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Intrusive",0.199205309152603
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Auditory",0.131893917918205
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Quality of Life",0.124154455959797
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Sense of Control",0.0932707935571671
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Cognitive",0.0320868082344532
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Emotional",0.028899010270834
+17,"How much has your tinnitus interfered with your ability to relax?","Relaxation","Sleep",0.0231167431920767
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Relaxation",0.272929936647415
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Intrusive",0.220273315906525
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Quality of Life",0.185545980930328
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Auditory",0.124944090843201
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Sense of Control",0.0944263637065887
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Cognitive",0.0402278304100037
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Sleep",0.0331597328186035
+18,"How much has your tinnitus interfered with your ability to enjoy peace and quiet?","Relaxation","Emotional",0.0284927804023027
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Quality of Life",0.249782785773277
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Intrusive",0.247673481702805
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Auditory",0.204750567674637
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Sense of Control",0.140922039747238
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Cognitive",0.06064248457551
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Emotional",0.042252354323864
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Relaxation",0.0377614982426167
+19,"How much has your tinnitus interfered with your enjoyment of social activities?","Quality of Life","Sleep",0.0162148270756006
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Quality of Life",0.294033139944077
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Intrusive",0.261105895042419
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Auditory",0.178126513957977
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Sense of Control",0.12561322748661
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Cognitive",0.0538460798561573
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Relaxation",0.0384395308792591
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Emotional",0.0371880047023296
+20,"How much has your tinnitus interfered with your enjoyment of life?","Quality of Life","Sleep",0.0116476155817509
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Intrusive",0.357711553573608
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Auditory",0.192704528570175
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Quality of Life",0.156482830643654
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Sense of Control",0.123609028756618
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Cognitive",0.0749309360980988
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Emotional",0.0662877336144447
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Relaxation",0.0167993251234293
+21,"How much has your tinnitus interfered with your relationships with family, friends, and other people?","Quality of Life","Sleep",0.0114740934222937
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Auditory",0.291987627744675
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Quality of Life",0.170623064041138
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Intrusive",0.161055982112885
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Sense of Control",0.157805368304253
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Emotional",0.0851247236132622
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Cognitive",0.0805239975452423
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Relaxation",0.0313403457403183
+22,"How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?","Quality of Life","Sleep",0.0215388722717762
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Emotional",0.276190191507339
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Auditory",0.267623543739319
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Intrusive",0.163372159004211
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Sense of Control",0.101138941943645
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Quality of Life",0.0977697968482971
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Cognitive",0.0711630135774612
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Relaxation",0.0122568784281611
+23,"How anxious or worried has your tinnitus made you feel?","Emotional","Sleep",0.0104854702949524
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Auditory",0.2941674888134
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Emotional",0.252993524074554
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Sense of Control",0.131608515977859
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Quality of Life",0.122660182416439
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Intrusive",0.113285198807716
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Cognitive",0.0595599301159382
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Relaxation",0.01336963288486
+24,"How bothered or upset have you been because of your tinnitus?","Emotional","Sleep",0.0123555371537805
+25,"How depressed were you because of your tinnitus?","Emotional","Auditory",0.306143671274185
+25,"How depressed were you because of your tinnitus?","Emotional","Emotional",0.205231964588165
+25,"How depressed were you because of your tinnitus?","Emotional","Quality of Life",0.174153015017509
+25,"How depressed were you because of your tinnitus?","Emotional","Sense of Control",0.096052922308445
+25,"How depressed were you because of your tinnitus?","Emotional","Intrusive",0.0936053991317749
+25,"How depressed were you because of your tinnitus?","Emotional","Cognitive",0.0871413201093674
+25,"How depressed were you because of your tinnitus?","Emotional","Relaxation",0.0219389852136374
+25,"How depressed were you because of your tinnitus?","Emotional","Sleep",0.0157327316701412
