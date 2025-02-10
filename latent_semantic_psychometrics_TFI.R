@@ -1,20 +1,18 @@
-# =============================================
-# 0. SETUP: Load Required Packages and Data
-# =============================================
+# ==================================================
+# 0. SETUP: Load Required Packages and Data ----
+# ==================================================
 
-# Load the main package for text analysis.
-library(text)            # Primary package for advanced text-based NLP.
-# Additional packages for data manipulation and visualization.
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-library(stringr)
-library(tidytext)
-# =============================================
-# 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS)
-# =============================================
+library(text)       # Primary package for advanced text-based NLP.
+library(dplyr)      # Data manipulation
+library(ggplot2)    # Visualization
+library(tidyr)      # Data restructuring
+library(stringr)    # String operations
+library(tidytext)   # Text processing
 
-# Data frame with all 25 TFI items and their respective domains
+# ==================================================
+# 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
+# ==================================================
+
 tfi_data <- data.frame(
   QuestionID = 1:25,
   QuestionText = c(
@@ -72,41 +70,15 @@ tfi_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-
-
-# Define the TFI domain labels
 candidate_domains <- c(
-  "Intrusive", 
-  "Sense of Control", 
-  "Cognitive", 
-  "Sleep", 
-  "Auditory", 
-  "Relaxation", 
-  "Quality of Life", 
-  "Emotional"
+  "Intrusive", "Sense of Control", "Cognitive", "Sleep", 
+  "Auditory", "Relaxation", "Quality of Life", "Emotional"
 )
 
-# ==============================================
-### 2. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ###
-# ==============================================
+# ==================================================
+# 2. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ----
+# ==================================================
 
-
-# Define the TFI domain labels
-candidate_domains <- c(
-  "Intrusive", 
-  "Sense of Control", 
-  "Cognitive", 
-  "Sleep", 
-  "Auditory", 
-  "Relaxation", 
-  "Quality of Life", 
-  "Emotional"
-)
-
-# Assume `tfi_data$QuestionText` contains 25 TFI items
-# Assume `candidate_domains` contains domain labels
-
-# Initialize empty dataframe to store results
 classification_results <- data.frame(
   Item = character(),
   Predicted_Domain = character(),
@@ -114,19 +86,15 @@ classification_results <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Iterate through all TFI items
 for (i in 1:length(tfi_data$QuestionText)) {
-  
-  # Apply zero-shot classification (returns multiple probabilities)
   test_result <- textZeroShot(tfi_data$QuestionText[i], candidate_domains)
-  
-  # Add item column for tracking
   test_result$Item <- tfi_data$QuestionText[i]
-  
-  # Append results to dataframe
   classification_results <- rbind(classification_results, test_result)
 }
 
+# ==================================================
+# 3. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# ==================================================
 
 # Pivot labels into long format, keeping Item for context
 classification_results_long <- classification_results %>%
@@ -171,14 +139,18 @@ classification_results_long <- classification_results_long %>%
 
 #write.csv(classification_results_long, "TFI_ZeroShot_Classifications_Long.csv", row.names = FALSE)
 
+# ==================================================
+# 4. VISUALIZATION: STACKED BAR CHARTS ----
+# ==================================================
+
 ggplot(classification_results_long, aes(
   x = reorder(Item, -Confidence, median), 
   y = Confidence, 
   fill = Predicted_Domain
 )) +
-  geom_bar(stat = "identity", position = "stack") +  # Stacked bars
-  facet_wrap(~ IntendedDomain, scales = "free_y", ncol = 1) +  # Facet to show Intended Domain
-  coord_flip() +  # Flip for readability
+  geom_bar(stat = "identity", position = "stack") +  
+  facet_wrap(~ IntendedDomain, scales = "free_y", ncol = 1) +  
+  coord_flip() +  
   theme_minimal() +
   labs(
     title = "Confidence Scores for Predicted Domains per TFI Item",
@@ -186,56 +158,28 @@ ggplot(classification_results_long, aes(
     y = "Confidence Score",
     fill = "Predicted Domain"
   ) +
-  theme(
-    axis.text.y = element_text(size = 8),
-    strip.text = element_text(size = 10, face = "bold"),  # Highlight intended domain in facet labels
-    legend.position = "bottom"
-  )
+  theme(axis.text.y = element_text(size = 8), legend.position = "bottom")
 
-
-ggplot(classification_results_long, aes(
-  x = reorder_within(Predicted_Domain, -Confidence, Item),  # Orders per item
-  y = Confidence,
-  fill = Predicted_Domain  # Different colors for domains
-)) +
-  geom_bar(stat = "identity", width = 0.6) +  # Regular bars
-  facet_wrap(~ Item, scales = "free_y", ncol = 2, labeller = label_wrap_gen(width = 40)) +  # Auto-wrap long titles, wider layout
-  scale_x_reordered() +  # Ensures reordering works within facets
-  theme_minimal() +
-  labs(
-    title = "Predicted Domains per TFI Item (Ordered by Confidence)",
-    x = "Predicted Domain",
-    y = "Confidence Score",
-    fill = "Predicted Domain"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),  # Tilt X-axis for readability
-    axis.text.y = element_text(size = 8),
-    strip.text = element_text(size = 9, face = "bold"),  # Keep readable facet titles
-    legend.position = "bottom"
-  )
-
+# ==================================================
+# 5. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
+# ==================================================
 
 for (item in unique(classification_results_long$Item)) {
   
-  # Filter data for the specific item
   item_data <- classification_results_long %>% filter(Item == item)
-  
-  # Extract item number (QuestionID) and intended domain
   item_number <- unique(item_data$QuestionID)
-  intended_domain <- unique(item_data$IntendedDomain)  # Extract intended domain
+  intended_domain <- unique(item_data$IntendedDomain)
   
-  # Create plot
   p <- ggplot(item_data, aes(
-    x = reorder(Predicted_Domain, -Confidence),  # Order by confidence
+    x = reorder(Predicted_Domain, -Confidence),  
     y = Confidence,
     fill = Predicted_Domain
   )) +
-    geom_bar(stat = "identity", width = 0.6) +  # Regular bars
+    geom_bar(stat = "identity", width = 0.6) +
     theme_minimal() +
     labs(
-      title = paste("Item", item_number, ":", item),  # Includes QuestionID in title
-      subtitle = paste("Intended Domain:", intended_domain),  # Shows intended domain
+      title = paste("Item", item_number, ":", item),
+      subtitle = paste("Intended Domain:", intended_domain),
       x = "Predicted Domain",
       y = "Confidence Score",
       fill = "Predicted Domain"
@@ -246,10 +190,12 @@ for (item in unique(classification_results_long$Item)) {
       legend.position = "bottom"
     )
   
-  # Display the plot
   print(p)
 }
 
-
-
-
+# Using classification_results_long, summarise how many items were correctly classified (i.e., the largest confidence score was also it's predicted domain)
+correctly_classified <- classification_results_long %>%
+  group_by(QuestionID) %>%
+  filter(Confidence == max(Confidence)) %>%
+  filter(Predicted_Domain == IntendedDomain) %>%
+  summarise(Correctly_Classified = n())
