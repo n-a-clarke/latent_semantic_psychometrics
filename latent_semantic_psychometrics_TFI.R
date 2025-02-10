@@ -76,7 +76,7 @@ candidate_domains <- c(
 )
 
 # ==================================================
-# 2. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ----
+# 2a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = F) ----
 # ==================================================
 
 classification_results <- data.frame(
@@ -93,7 +93,7 @@ for (i in 1:length(tfi_data$QuestionText)) {
 }
 
 # ==================================================
-# 3. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# 3a. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
 # ==================================================
 
 # Pivot labels into long format, keeping Item for context
@@ -140,7 +140,7 @@ classification_results_long <- classification_results_long %>%
 #write.csv(classification_results_long, "TFI_ZeroShot_Classifications_Long.csv", row.names = FALSE)
 
 # ==================================================
-# 4. VISUALIZATION: STACKED BAR CHARTS ----
+# 4a. VISUALIZATION: STACKED BAR CHARTS ----
 # ==================================================
 
 ggplot(classification_results_long, aes(
@@ -161,7 +161,7 @@ ggplot(classification_results_long, aes(
   theme(axis.text.y = element_text(size = 8), legend.position = "bottom")
 
 # ==================================================
-# 5. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
+# 5a. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
 # ==================================================
 
 for (item in unique(classification_results_long$Item)) {
@@ -199,3 +199,119 @@ correctly_classified <- classification_results_long %>%
   filter(Confidence == max(Confidence)) %>%
   filter(Predicted_Domain == IntendedDomain) %>%
   summarise(Correctly_Classified = n())
+
+# ================================================================
+# 2b. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = T) ----
+# ================================================================
+
+classification_results_multi <- data.frame(
+  Item = character(),
+  Predicted_Domain = character(),
+  Confidence = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (i in 1:length(tfi_data$QuestionText)) {
+  test_result <- textZeroShot(tfi_data$QuestionText[i], candidate_domains, multi_label = TRUE)
+  test_result$Item <- tfi_data$QuestionText[i]
+  classification_results_multi <- rbind(classification_results_multi, test_result)
+}
+
+# ==================================================
+# 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# ==================================================
+
+# Pivot labels into long format, keeping Item for context
+classification_results_multi_long <- classification_results_multi %>%
+  pivot_longer(
+    cols = starts_with("labels_x"), 
+    names_to = "Label_Index",
+    values_to = "Predicted_Domain"
+  ) %>%
+  mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
+  select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
+
+# Pivot scores separately
+classification_scores_multi_long <- classification_results_multi %>%
+  pivot_longer(
+    cols = starts_with("scores_x_"), 
+    names_to = "Score_Index",
+    values_to = "Confidence"
+  ) %>%
+  select(sequence, Score_Index, Confidence) # Keep only necessary columns
+
+
+# Perform the join using both sequence and Score_Index
+classification_results_multi_long <- classification_results_multi_long %>%
+  left_join(classification_scores_multi_long, by = c("sequence", "Score_Index")) %>%
+  arrange(sequence, -Confidence) %>%
+  select(Item, Predicted_Domain, Confidence)
+
+# Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
+classification_results_multi_long <- classification_results_multi_long %>%
+  left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
+  select(QuestionID, Item, Predicted_Domain, Confidence) %>%
+  arrange(QuestionID)
+
+# Using the tfi_data for reference, add predicted domain to classification_results_long
+classification_results_multi_long <- classification_results_multi_long %>%
+  left_join(tfi_data, by = c("Item" = "QuestionText")) 
+
+#drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
+classification_results_multi_long <- classification_results_multi_long %>%
+  rename(QuestionID = QuestionID.x) %>%
+  select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
+
+#write.csv(classification_results_multi_long, "TFI_ZeroShot_Classifications_Multi_Long.csv", row.names = FALSE)
+
+
+# ==================================================
+# 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
+# ==================================================
+
+for (item in unique(classification_results_multi_long$Item)) {
+  
+  item_data <- classification_results_multi_long %>% filter(Item == item)
+  item_number <- unique(item_data$QuestionID)
+  intended_domain <- unique(item_data$IntendedDomain)
+  
+  p <- ggplot(item_data, aes(
+    x = reorder(Predicted_Domain, -Confidence),  
+    y = Confidence,
+    fill = Predicted_Domain
+  )) +
+    geom_bar(stat = "identity", width = 0.6) +
+    theme_minimal() +
+    labs(
+      title = paste("Item", item_number, ":", item),
+      subtitle = paste("Intended Domain:", intended_domain),
+      x = "Predicted Domain",
+      y = "Confidence Score",
+      fill = "Predicted Domain"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      legend.position = "bottom"
+    )
+  
+  print(p)
+}
+
+# Using classification_results_multi_long, summarise how many items were correctly classified (i.e., the largest confidence score was also it's predicted domain)
+correctly_classified_multi <- classification_results_multi_long %>%
+  group_by(QuestionID) %>%
+  filter(Confidence == max(Confidence)) %>%
+  filter(Predicted_Domain == IntendedDomain) %>%
+  summarise(Correctly_Classified = n())
+
+# Using classification_results_multi_long, summarise how many items had confidence scores >0.7
+high_confidence_multi <- classification_results_multi_long %>%
+  group_by(QuestionID) %>%
+  filter(Confidence > 0.7) %>%
+  summarise(High_Confidence = n())
+
+# Using classification_results_multi_long, filter to all rows where confidence scores >0.7 and where the predicted domain does not match the intended domain
+high_confidence_incorrect_multi <- classification_results_multi_long %>%
+  filter(Confidence > 0.7) %>%
+  filter(Predicted_Domain != IntendedDomain)
