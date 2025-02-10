@@ -79,18 +79,18 @@ candidate_domains <- c(
 # 2a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = F) ----
 # ==================================================
 
-classification_results <- data.frame(
-  Item = character(),
-  Predicted_Domain = character(),
-  Confidence = numeric(),
-  stringsAsFactors = FALSE
-)
-
-for (i in 1:length(tfi_data$QuestionText)) {
-  test_result <- textZeroShot(tfi_data$QuestionText[i], candidate_domains)
-  test_result$Item <- tfi_data$QuestionText[i]
-  classification_results <- rbind(classification_results, test_result)
-}
+# classification_results <- data.frame(
+#   Item = character(),
+#   Predicted_Domain = character(),
+#   Confidence = numeric(),
+#   stringsAsFactors = FALSE
+# )
+# 
+# for (i in 1:length(tfi_data$QuestionText)) {
+#   test_result <- textZeroShot(tfi_data$QuestionText[i], candidate_domains)
+#   test_result$Item <- tfi_data$QuestionText[i]
+#   classification_results <- rbind(classification_results, test_result)
+# }
 
 # ==================================================
 # 3a. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
@@ -138,6 +138,9 @@ classification_results_long <- classification_results_long %>%
   select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
 
 #write.csv(classification_results_long, "TFI_ZeroShot_Classifications_Long.csv", row.names = FALSE)
+
+#read saved results
+classification_results_long <- read.csv("TFI_ZeroShot_Classifications_Long.csv")
 
 # ==================================================
 # 4a. VISUALIZATION: STACKED BAR CHARTS ----
@@ -204,18 +207,18 @@ correctly_classified <- classification_results_long %>%
 # 2b. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = T) ----
 # ================================================================
 
-classification_results_multi <- data.frame(
-  Item = character(),
-  Predicted_Domain = character(),
-  Confidence = numeric(),
-  stringsAsFactors = FALSE
-)
-
-for (i in 1:length(tfi_data$QuestionText)) {
-  test_result <- textZeroShot(tfi_data$QuestionText[i], candidate_domains, multi_label = TRUE)
-  test_result$Item <- tfi_data$QuestionText[i]
-  classification_results_multi <- rbind(classification_results_multi, test_result)
-}
+# classification_results_multi <- data.frame(
+#   Item = character(),
+#   Predicted_Domain = character(),
+#   Confidence = numeric(),
+#   stringsAsFactors = FALSE
+# )
+# 
+# for (i in 1:length(tfi_data$QuestionText)) {
+#   test_result <- textZeroShot(tfi_data$QuestionText[i], candidate_domains, multi_label = TRUE)
+#   test_result$Item <- tfi_data$QuestionText[i]
+#   classification_results_multi <- rbind(classification_results_multi, test_result)
+# }
 
 # ==================================================
 # 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
@@ -264,6 +267,7 @@ classification_results_multi_long <- classification_results_multi_long %>%
 
 #write.csv(classification_results_multi_long, "TFI_ZeroShot_Classifications_Multi_Long.csv", row.names = FALSE)
 
+classification_results_multi_long <- read.csv("TFI_ZeroShot_Classifications_Multi_Long.csv")
 
 # ==================================================
 # 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
@@ -281,6 +285,12 @@ for (item in unique(classification_results_multi_long$Item)) {
     fill = Predicted_Domain
   )) +
     geom_bar(stat = "identity", width = 0.6) +
+    geom_hline(yintercept = 0.7, linetype = "dashed", color = "darkgrey", linewidth = 1) +  # Dark grey threshold line
+    annotate("text", 
+             x = length(unique(item_data$Predicted_Domain)) + 0.2,  # Further right
+             y = 0.64,  # Lowered text position
+             label = "High Confidence\nThreshold (0.7)",  # Line break added
+             color = "darkgrey", hjust = 1, size = 3.2) +  # Reduced text size
     theme_minimal() +
     labs(
       title = paste("Item", item_number, ":", item),
@@ -297,6 +307,7 @@ for (item in unique(classification_results_multi_long$Item)) {
   
   print(p)
 }
+
 
 # Using classification_results_multi_long, summarise how many items were correctly classified (i.e., the largest confidence score was also it's predicted domain)
 correctly_classified_multi <- classification_results_multi_long %>%
@@ -315,3 +326,20 @@ high_confidence_multi <- classification_results_multi_long %>%
 high_confidence_incorrect_multi <- classification_results_multi_long %>%
   filter(Confidence > 0.7) %>%
   filter(Predicted_Domain != IntendedDomain)
+
+# ==================================================
+# 5. LEXICAL EMBEDDING PSYCHOMETRICS (LEP) ----
+# ==================================================
+
+# tfi_embeddings <- textEmbed(
+#   texts = tfi_data$QuestionText,  # Full TFI question text
+#   aggregation_from_layers_to_tokens = "mean",  # Aggregate across layers
+#   aggregation_from_tokens_to_texts = "mean",  # Aggregate all token embeddings to one per question
+#   keep_token_embeddings = FALSE  # Only store full sentence embeddings
+# )
+
+# saveRDS(tfi_embeddings$texts, "TFI_Embeddings_Sentences.rds")
+
+tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
+
+
