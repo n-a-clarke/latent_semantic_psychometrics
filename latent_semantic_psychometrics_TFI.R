@@ -342,4 +342,23 @@ high_confidence_incorrect_multi <- classification_results_multi_long %>%
 
 tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
 
+tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
+
+items <- as.data.frame(t(tfi_embeddings_texts_df))  # Transpose: Dimensions → Rows, Items → Columns
+
+
+sum(is.na(items))  # Check for missing values
+
+num_tfi_items <- ncol(items)  # Number of TFI items
+
+pca1 <- principal(items, nfactors = num_tfi_items, rotate = "none")
+
+print(pca1$values)  # Look at eigenvalues, keep components >1
+
+items <- scale(items)  # Mean=0, SD=1 for each item
+
+pca1 <- principal(items, nfactors = num_tfi_items, rotate = "none")
+
+print(pca1$values)  # Look at eigenvalues, keep components >1
+
 
