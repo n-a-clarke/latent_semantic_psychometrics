@@ -8,6 +8,7 @@ library(ggplot2)    # Visualization
 library(tidyr)      # Data restructuring
 library(stringr)    # String operations
 library(tidytext)   # Text processing
+library(viridis)    # Color palettes
 
 # ==================================================
 # 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
@@ -383,33 +384,6 @@ abline(h = 1, col = "red", lty = 2, lwd = 2)  # Dashed red line
 #   method = "cosine"  # Default is cosine similarity
 # )
 
-# Initialize an empty dataframe to store results
-similarity_results <- data.frame(
-  Question1 = character(),
-  Question2 = character(),
-  Similarity = numeric(),
-  stringsAsFactors = FALSE
-)
-
-# # Loop through each question
-# for (i in 1:(nrow(tfi_embeddings_texts_df) - 1)) {
-#   for (j in (i + 1):nrow(tfi_embeddings_texts_df)) {
-#     
-#     # Compute similarity between Question i and Question j
-#     similarity_score <- textSimilarity(
-#       x = tfi_embeddings_texts_df[i, , drop = FALSE],  # Question i
-#       y = tfi_embeddings_texts_df[j, , drop = FALSE],  # Question j
-#       method = "cosine"
-#     )
-#     
-#     # Store the result in a dataframe
-#     similarity_results <- rbind(similarity_results, data.frame(
-#       Question1 = tfi_data$QuestionText[i],
-#       Question2 = tfi_data$QuestionText[j],
-#       Similarity = similarity_score
-#     ))
-#   }
-# }
 
 # Initialize an empty dataframe
 similarity_results <- data.frame(
@@ -455,37 +429,57 @@ similarity_results <- similarity_results %>%
   )
 
 
-# Compute mean within-domain and cross-domain theta values
-mean_within_theta <- mean(similarity_results_intrusive_q1$Theta[similarity_results_intrusive_q1$SameDomain == "Within-Domain"])
-mean_cross_theta <- mean(similarity_results_intrusive_q1$Theta[similarity_results_intrusive_q1$SameDomain == "Cross-Domain"])
+# Merge TFI item numbers for both Question1 and Question2
+similarity_results_expanded <- similarity_results_expanded %>%
+  left_join(tfi_data %>% select(QuestionID, QuestionText), by = c("Question1" = "QuestionText")) %>%
+  rename(QuestionID1 = QuestionID) %>%
+  left_join(tfi_data %>% select(QuestionID, QuestionText), by = c("Question2" = "QuestionText")) %>%
+  rename(QuestionID2 = QuestionID)
 
-# Extract the target item's domain
-target_item_domain <- unique(similarity_results_intrusive_q1$Domain1)[1]
+# Ensure Question2 is a factor with item numbers in labels
+similarity_results_expanded$Question2 <- factor(
+  paste0("(", similarity_results_expanded$QuestionID2, ") ", similarity_results_expanded$Question2), 
+  levels = unique(paste0("(", similarity_results_expanded$QuestionID2, ") ", similarity_results_expanded$Question2))
+)
 
-# Create the plot
-ggplot(similarity_results_intrusive_q1, aes(y = reorder(Question2, Theta), x = Theta, color = Comparator_Domain)) +
-  geom_point(size = 4, alpha = 0.8) +  # Scatter plot of theta values
-  geom_vline(xintercept = mean_within_theta, linetype = "dashed", color = "blue", size = 1.2, alpha = 0.8) +  # Mean within-domain theta
-  geom_vline(xintercept = mean_cross_theta, linetype = "dashed", color = "black", size = 1.2, alpha = 0.8) +  # Mean cross-domain theta
-  scale_color_manual(values = c("Intrusive" = "blue", "Cognitive" = "green", "Emotional" = "red", 
-                                "Auditory" = "purple", "Relaxation" = "orange", "Quality of Life" = "brown", "Sleep" = "pink")) +
-  scale_x_continuous(breaks = seq(0, 90, by = 5)) +  # Add tick marks at every 5-degree interval
-  theme_minimal() +
-  labs(
-    title = "Theta Values for 'What percentage of your time awake were you consciously aware of your tinnitus?'",
-    subtitle = paste("Item Domain:", target_item_domain, 
-                     "\nDashed Lines: Blue = Mean Within-Domain Theta, Black = Mean Cross-Domain Theta"),
-    x = "Theta (Degrees)",
-    y = "Comparator TFI Item",
-    color = "Comparator Domain"
-  ) +
-  theme(
-    axis.text.y = element_text(size = 8),  # Keep Y-axis labels readable
-    legend.position = "bottom"
-  ) +
-  coord_cartesian(xlim = c(0, 90))  # Set Theta axis from 0 to 90
-
-
+for (target_item in unique(similarity_results_expanded$Question1)) {
+  
+  # Get the item number for the focal item
+  target_item_id <- similarity_results_expanded$QuestionID1[similarity_results_expanded$Question1 == target_item][1]
+  
+  # Filter dataset for the current TFI item
+  similarity_results_item <- similarity_results_expanded %>%
+    filter(Question1 == target_item) %>%
+    mutate(Comparator_Domain = Domain2)
+  
+  # Compute mean within-domain and cross-domain theta values
+  mean_within_theta <- mean(similarity_results_item$Theta[similarity_results_item$SameDomain == "Within-Domain"], na.rm = TRUE)
+  mean_cross_theta <- mean(similarity_results_item$Theta[similarity_results_item$SameDomain == "Cross-Domain"], na.rm = TRUE)
+  
+  # Extract the domain of the target item
+  target_item_domain <- unique(similarity_results_item$Domain1)[1]
+  
+  # Generate the plot
+  plot <- ggplot(similarity_results_item, aes(y = Question2, x = Theta, color = Comparator_Domain)) +
+    geom_point(size = 4, alpha = 0.8) +
+    geom_vline(xintercept = mean_within_theta, linetype = "dashed", color = "black", size = 1.2, alpha = 0.7) +
+    geom_vline(xintercept = mean_cross_theta, linetype = "dashed", color = "grey", size = 1.2, alpha = 0.6) +
+    scale_color_viridis_d(option = "H") +  
+    scale_x_continuous(breaks = seq(0, 90, by = 5)) +
+    theme_minimal() +
+    labs(title = paste0("Semantic Similarity for Item ", target_item_id, ": ", target_item),
+         subtitle = paste("Item Domain:", target_item_domain, 
+                          "\nDashed Lines: Black = Mean Within-Domain Theta, Grey = Mean Cross-Domain Theta",
+                          "\n0 = Perfectly Similar, 90 = Perfectly Dissimilar"),
+         x = "Theta (Degrees)",
+         y = "Comparator TFI Item",
+         color = "Comparator Domain") +
+    theme(axis.text.y = element_text(size = 8), legend.position = "bottom") +
+    coord_cartesian(xlim = c(0, 90))
+  
+  # Display plot
+  print(plot)
+}
 
 
 
