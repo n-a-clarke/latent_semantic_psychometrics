@@ -428,6 +428,22 @@ similarity_results <- similarity_results %>%
     Theta = acos(pmin(1, abs(Similarity))) * (180 / pi)  # Convert to degrees
   )
 
+# Create reversed pairs to ensure every question has a full comparison
+similarity_results_expanded <- similarity_results %>%
+  rename(Original_Question1 = Question1, Original_Domain1 = Domain1,
+         Original_Question2 = Question2, Original_Domain2 = Domain2) %>%
+  bind_rows(
+    similarity_results %>%
+      rename(Original_Question1 = Question2, Original_Domain1 = Domain2,
+             Original_Question2 = Question1, Original_Domain2 = Domain1)
+  ) %>%
+  rename(Question1 = Original_Question1, Domain1 = Original_Domain1,
+         Question2 = Original_Question2, Domain2 = Original_Domain2)
+
+# Ensure Question2 is treated as a factor with full levels
+similarity_results_expanded$Question2 <- factor(similarity_results_expanded$Question2, levels = unique(similarity_results_expanded$Question2))
+
+
 
 # Merge TFI item numbers for both Question1 and Question2
 similarity_results_expanded <- similarity_results_expanded %>%
@@ -435,6 +451,8 @@ similarity_results_expanded <- similarity_results_expanded %>%
   rename(QuestionID1 = QuestionID) %>%
   left_join(tfi_data %>% select(QuestionID, QuestionText), by = c("Question2" = "QuestionText")) %>%
   rename(QuestionID2 = QuestionID)
+
+
 
 # Ensure Question2 is a factor with item numbers in labels
 similarity_results_expanded$Question2 <- factor(
@@ -447,10 +465,14 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
   # Get the item number for the focal item
   target_item_id <- similarity_results_expanded$QuestionID1[similarity_results_expanded$Question1 == target_item][1]
   
-  # Filter dataset for the current TFI item
+  # Wrap the title for readability
+  wrapped_title <- str_wrap(paste0("Semantic Similarity for Item ", target_item_id, ": ", target_item), width = 60)
+  
+  # Filter dataset for the current TFI item and order by ascending Theta (smallest at bottom)
   similarity_results_item <- similarity_results_expanded %>%
     filter(Question1 == target_item) %>%
-    mutate(Comparator_Domain = Domain2)
+    mutate(Comparator_Domain = Domain2) %>%
+    arrange(Theta)  # Ensures smallest Theta is at the bottom
   
   # Compute mean within-domain and cross-domain theta values
   mean_within_theta <- mean(similarity_results_item$Theta[similarity_results_item$SameDomain == "Within-Domain"], na.rm = TRUE)
@@ -458,6 +480,16 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
   
   # Extract the domain of the target item
   target_item_domain <- unique(similarity_results_item$Domain1)[1]
+  
+  # Ensure Question2 is treated as a factor in the correct order
+  similarity_results_item$Question2 <- factor(similarity_results_item$Question2, levels = similarity_results_item$Question2)
+  
+  # Manually structured subtitle (avoids overwriting line breaks)
+  subtitle_text <- paste(
+    "Item Domain:", target_item_domain, "\n",
+    "Dashed Lines: Black = Mean Within-Domain Theta, Grey = Mean Cross-Domain Theta", "\n",
+    "0 = Perfectly Similar, 90 = Perfectly Dissimilar"
+  )
   
   # Generate the plot
   plot <- ggplot(similarity_results_item, aes(y = Question2, x = Theta, color = Comparator_Domain)) +
@@ -467,10 +499,8 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
     scale_color_viridis_d(option = "H") +  
     scale_x_continuous(breaks = seq(0, 90, by = 5)) +
     theme_minimal() +
-    labs(title = paste0("Semantic Similarity for Item ", target_item_id, ": ", target_item),
-         subtitle = paste("Item Domain:", target_item_domain, 
-                          "\nDashed Lines: Black = Mean Within-Domain Theta, Grey = Mean Cross-Domain Theta",
-                          "\n0 = Perfectly Similar, 90 = Perfectly Dissimilar"),
+    labs(title = wrapped_title,
+         subtitle = subtitle_text,  # Manually structured with line breaks
          x = "Theta (Degrees)",
          y = "Comparator TFI Item",
          color = "Comparator Domain") +
@@ -480,9 +510,6 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
   # Display plot
   print(plot)
 }
-
-
-
 
 
 
