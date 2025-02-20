@@ -511,7 +511,75 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
   print(plot)
 }
 
+# ==================================================
+# 8. SEMANTIC CONSTRUCT MAPPING ----
+# ==================================================
 
+# Define the theoretical domain descriptions from Meikle et al. (2012)
+tfi_domains <- tibble(
+  Domain = c("Intrusive", "Cognitive", "Sleep", "Auditory", "Relaxation", 
+             "Quality of Life", "Emotional", "Sense of Control"),
+  Definition = c(
+    "Measures how much the tinnitus intrudes on consciousness and daily life.",
+    "Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+    "Assesses the extent to which tinnitus interferes with sleep.",
+    "Evaluates problems hearing clearly due to tinnitus.",
+    "Examines the impact of tinnitus on relaxation and quiet activities.",
+    "Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+    "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+    "Determines how much control the patient feels they have over their tinnitus."
+  )
+)
+
+# Select one TFI item (e.g., first item in dataset)
+single_question_text <- tfi_data$QuestionText[1]
+single_question_id <- tfi_data$QuestionID[1]
+single_question_domain <- tfi_data$IntendedDomain[1]  # Intended domain
+
+# Select the "Intrusive" domain definition
+target_domain_name <- "Intrusive"
+target_domain_text <- "Measures how much the tinnitus intrudes on consciousness and daily life."
+
+# Embed the "Intrusive" domain description
+domain_embedding <- textEmbed(target_domain_text, model = "bert-base-uncased")
+
+# Extract the precomputed embedding for the selected TFI item
+question_embedding <- tfi_embeddings_texts_df$texts[1,]
+
+# Convert embeddings to numeric matrices
+question_embedding_df<- as.character(question_embedding)
+domain_embedding_df<- as.data.frame(domain_embedding$texts)  # Ensure sentence embedding format
+
+# Standardize column names
+colnames(domain_embedding_df) <- colnames(tfi_embeddings_texts_df)
+
+# Convert both embeddings to 1-row matrices
+question_embedding <- as.data.frame(tfi_embeddings_texts_df[1, , drop = FALSE])
+domain_embedding <- as.data.frame(domain_embedding_df[1, , drop = FALSE])
+
+# Compute similarity score
+similarity_score <- textSimilarity(
+  x = question_embedding,  # Ensure 1-row matrix
+  y = domain_embedding,  # Ensure 1-row matrix
+  method = "cosine"
+)
+
+# Print result
+print(paste("Cosine similarity between Question 1 and 'Intrusive' domain:", round(similarity_score, 3)))
+
+
+
+# Compute similarity matrix using cosine similarity
+# textSimilarity(
+#   x = tfi_embeddings_texts_df[1,],  # Text embeddings
+#   y = tfi_embeddings_texts_df[3,],  # Compare all to all
+#   method = "cosine"  # Default is cosine similarity
+# )
+
+# Print result
+print(paste("TFI Item:", single_question_text))
+print(paste("Domain:", target_domain_name))
+print(paste("Similarity Score:", round(similarity_score, 3)))
 
 
 
