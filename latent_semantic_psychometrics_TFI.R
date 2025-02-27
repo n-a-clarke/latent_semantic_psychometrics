@@ -706,14 +706,139 @@ semantic_mapping_results <- semantic_mapping_results %>%
     Theta = acos(pmin(1, abs(SimilarityScore))) * (180 / pi)  # Convert to degrees
   )
 
+# # Define the target item (e.g., Item 1)
+# target_item_id <- 1  
+# 
+# # Extract question content for title
+# target_question_text <- semantic_mapping_results %>%
+#   filter(QuestionID == target_item_id) %>%
+#   pull(QuestionText) %>%
+#   unique()
+# 
+# # Extract intended domain for subtitle
+# target_item_domain <- semantic_mapping_results %>%
+#   filter(QuestionID == target_item_id) %>%
+#   pull(IntendedDomain) %>%
+#   unique()
+# 
+# # Compute mean similarity score for other items within the same domain (excluding the focal item)
+# mean_other_items_similarity <- semantic_mapping_results %>%
+#   filter(IntendedDomain == target_item_domain & QuestionID != target_item_id) %>%
+#   summarise(mean_similarity = mean(SimilarityScore, na.rm = TRUE)) %>%
+#   pull(mean_similarity)
+# 
+# # Format question text for title (wrap for readability)
+# wrapped_title <- str_wrap(paste0("Semantic Construct Similarity for Item ", target_item_id, ": ", target_question_text), width = 80)
+# 
+# # Plot for the target item
+# semantic_mapping_results %>% 
+#   filter(QuestionID == target_item_id) %>%
+#   arrange(desc(SimilarityScore)) %>%  # Order by descending similarity
+#   ggplot(aes(x = reorder(ComparedDomain, -SimilarityScore), y = SimilarityScore)) +
+#   geom_point(size = 4, alpha = 0.8, color = "blue") +
+#   geom_hline(yintercept = mean_other_items_similarity, linetype = "dashed", color = "black", size = 1) +  # Black reference line
+#   theme_minimal() +
+#   scale_y_continuous(limits = c(0, 1)) +  # Fix Y-axis range to 0-1
+#   labs(
+#     title = wrapped_title,  # Wrapped title for readability
+#     subtitle = paste("Intended Domain:", target_item_domain, 
+#                      "\nBlack Line = Mean Similarity Score for Other Items in the Same Domain"),
+#     x = "Compared Domain Definition",
+#     y = "Similarity Score"
+#   ) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+# ✅ Preprocess to include Domain Definitions in Labels
+semantic_mapping_results <- semantic_mapping_results %>%
+  mutate(ComparedDomainLabel = paste0(ComparedDomain, " - ", DomainDefinition))  # Combine domain name + definition
+
+# ✅ Format question text for title (wrapped)
+wrapped_title <- str_wrap(paste0("Semantic Construct Similarity for Item ", target_item_id, ": ", target_question_text), width = 80)
+
+# ✅ Generate and print plot (Flipped Axes & Highest Similarity at Bottom)
+plot <- semantic_mapping_results %>% 
+  filter(QuestionID == target_item_id) %>%
+  arrange(desc(SimilarityScore)) %>%  # ✅ Highest similarity at bottom
+  ggplot(aes(y = reorder(ComparedDomainLabel, -SimilarityScore), x = SimilarityScore)) +  
+  geom_point(size = 4, alpha = 0.8, color = "blue") +
+  geom_vline(xintercept = mean_other_items_similarity, linetype = "dashed", color = "black", size = 1) +  
+  theme_minimal() +
+  scale_x_reverse(limits = c(1, 0), breaks = seq(1, 0, by = -0.05)) +  # ✅ Reverse X-axis (1 to 0, left to right)
+  labs(
+    title = wrapped_title,  
+    subtitle = paste("Intended Domain:", target_item_domain, 
+                     "\nDashed Black Line = Mean Similarity Score for Other Items in the Same Domain"),
+    x = "Similarity Score (Higher = Left, Lower = Right)",  # ✅ Clarify reversed scale
+    y = "Compared Domain Definition"  
+  ) +
+  theme(axis.text.x = element_text(size = 10),  
+        axis.text.y = element_text(size = 10),  
+        legend.position = "bottom")  
+
+print(plot)  # ✅ Display plot in RStudio
 
 
+# ✅ Preprocess to include Domain Definitions in Labels
+semantic_mapping_results <- semantic_mapping_results %>%
+  mutate(ComparedDomainLabel = paste0(ComparedDomain, " - ", DomainDefinition))  # Combine domain name + definition
 
+# ✅ Loop through all TFI items
+for (target_item_id in unique(semantic_mapping_results$QuestionID)) {
+  
+  # Extract question content for title
+  target_question_text <- semantic_mapping_results %>%
+    filter(QuestionID == target_item_id) %>%
+    pull(QuestionText) %>%
+    unique()
+  
+  # Extract intended domain for subtitle
+  target_item_domain <- semantic_mapping_results %>%
+    filter(QuestionID == target_item_id) %>%
+    pull(IntendedDomain) %>%
+    unique()
+  
+  # Compute mean similarity score for other items within the same domain (excluding the focal item)
+  mean_other_items_similarity <- semantic_mapping_results %>%
+    filter(IntendedDomain == target_item_domain & QuestionID != target_item_id) %>%
+    summarise(mean_similarity = mean(SimilarityScore, na.rm = TRUE)) %>%
+    pull(mean_similarity)
+  
+  # Format question text for title (wrapped)
+  wrapped_title <- str_wrap(paste0("Semantic Construct Similarity for Item ", target_item_id, ": ", target_question_text), width = 80)
+  
+  # ✅ Generate plot (Flipped Axes & Highest Similarity at Bottom)
+  plot <- semantic_mapping_results %>% 
+    filter(QuestionID == target_item_id) %>%
+    arrange(desc(SimilarityScore)) %>%  # ✅ Highest similarity at bottom
+    ggplot(aes(y = reorder(ComparedDomainLabel, -SimilarityScore), x = SimilarityScore)) +  
+    geom_point(size = 4, alpha = 0.8, color = "blue") +
+    geom_vline(xintercept = mean_other_items_similarity, linetype = "dashed", color = "black", size = 1) +  
+    theme_minimal() +
+    scale_x_reverse(limits = c(1, 0), breaks = seq(1, 0, by = -0.05)) +  # ✅ Reverse X-axis (1 to 0, left to right)
+    labs(
+      title = wrapped_title,  
+      subtitle = paste("Intended Domain:", target_item_domain, 
+                       "\nDashed Black Line = Mean Similarity Score for Other Items in the Same Domain"),
+      x = "Similarity Score (Higher = Left, Lower = Right)",  
+      y = "Compared Domain Definition"  
+    ) +
+    theme(axis.text.x = element_text(size = 10),  
+          axis.text.y = element_text(size = 10),  
+          legend.position = "bottom")  
+  
+  # ✅ Display each plot
+  print(plot)  
+}
 
+# Use semantic_mapping_results to summarise the highest similarity domain for each item
+highest_similarity_domain <- semantic_mapping_results %>%
+  group_by(QuestionID) %>%
+  filter(SimilarityScore == max(SimilarityScore)) %>%
+  summarise(Highest_Similarity_Domain = first(ComparedDomain))
 
-
-
-
-
+# Use highest_similarity_domain to summarise domain frequency
+domain_frequency <- highest_similarity_domain %>%
+  group_by(Highest_Similarity_Domain) %>%
+  summarise(Frequency = n())
 
 
