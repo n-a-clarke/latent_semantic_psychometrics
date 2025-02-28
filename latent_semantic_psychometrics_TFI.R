@@ -841,4 +841,46 @@ domain_frequency <- highest_similarity_domain %>%
   group_by(Highest_Similarity_Domain) %>%
   summarise(Frequency = n())
 
+# ================================================================
+# 6. LATENT EMBEDDING GRAPH ANALYSIS (LEGA) USING EGA() ----
+# ================================================================
+
+# ✅ Load required packages
+library(EGAnet)  # EGA package for network analysis
+
+# ✅ Load zero-shot classification results
+classification_results_multi_long <- read.csv("TFI_ZeroShot_Classifications_Multi_Long.csv")
+
+# ✅ Pivot the dataset into wide format
+classification_results_wide <- classification_results_multi_long %>%
+  pivot_wider(names_from = Predicted_Domain, values_from = Confidence, values_fill = 0) %>%
+  arrange(QuestionID)  # Ensure consistent order
+
+# ✅ Convert to matrix format for EGA()
+ega_input<- classification_results_wide %>%
+  select(-c(QuestionID, Item, IntendedDomain))
+
+#rownames(ega_input) <- classification_results_wide$QuestionID  # Assign rownames as QuestionID
+
+# ✅ Run Exploratory Graph Analysis (EGA)
+ega_result <- EGA(ega_input, model = "glasso")  # Graphical LASSO model
+
+# ✅ Print Summary
+summary(ega_result)
+
+# ✅ Visualize the EGA Network
+plot(ega_result, title = "Latent Semantic Graph Analysis for TFI")
+
+# Transpose the embeddings to ensure columns represent items
+ega_matrix <- t(as.matrix(tfi_embeddings_texts_df))
+
+# Check structure before proceeding
+str(ega_matrix)
+
+# Ensure correct dimensions (should now be 768 x 25)
+dim(ega_matrix)  # Should return (768, 25)
+
+bootstrapped_ega <- bootEGA(ega_input, model = "glasso", iter = 500, seed = 2, type = "resampling",
+                            algorithm = "walktrap", na.data = "pairwise", uni.method = "expand")
+
 
