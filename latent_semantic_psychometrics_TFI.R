@@ -77,6 +77,87 @@ candidate_domains <- c(
 )
 
 # ==================================================
+# 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
+# ==================================================
+
+tfi_data <- data.frame(
+  QuestionID = 1:25,
+  QuestionText = c(
+    # Intrusive (I)
+    "What percentage of your time awake were you consciously aware of your tinnitus?",
+    "How strong or loud was your tinnitus?",
+    "What percentage of your time awake were you annoyed by your tinnitus?",
+    
+    # Sense of Control (SC)
+    "Did you feel in control in regard to your tinnitus?",
+    "How easy was it for you to cope with your tinnitus?",
+    "How easy was it for you to ignore your tinnitus?",
+    
+    # Cognitive (C)
+    "How much did your tinnitus interfere with your ability to concentrate?",
+    "How much did your tinnitus interfere with your ability to think clearly?",
+    "How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?",
+    
+    # Sleep (SL)
+    "How often did your tinnitus make it difficult to fall asleep or stay asleep?",
+    "How often did your tinnitus cause you difficulty in getting as much sleep as you needed?",
+    "How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?",
+    
+    # Auditory (A)
+    "How much has your tinnitus interfered with your ability to hear clearly?",
+    "How much has your tinnitus interfered with your ability to understand people who are talking?",
+    "How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?",
+    
+    # Relaxation (R)
+    "How much has your tinnitus interfered with your quiet resting activities?",
+    "How much has your tinnitus interfered with your ability to relax?",
+    "How much has your tinnitus interfered with your ability to enjoy peace and quiet?",
+    
+    # Quality of Life (Q)
+    "How much has your tinnitus interfered with your enjoyment of social activities?",
+    "How much has your tinnitus interfered with your enjoyment of life?",
+    "How much has your tinnitus interfered with your relationships with family, friends, and other people?",
+    "How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?",
+    
+    # Emotional (E)
+    "How anxious or worried has your tinnitus made you feel?",
+    "How bothered or upset have you been because of your tinnitus?",
+    "How depressed were you because of your tinnitus?"
+  ),
+  IntendedDomain = c(
+    rep("Intrusive", 3),
+    rep("Sense of Control", 3),
+    rep("Cognitive", 3),
+    rep("Sleep", 3),
+    rep("Auditory", 3),
+    rep("Relaxation", 3),
+    rep("Quality of Life", 4),
+    rep("Emotional", 3)
+  ),
+  stringsAsFactors = FALSE
+)
+
+candidate_domains <- c(
+  "Intrusive", "Sense of Control", "Cognitive", "Sleep", 
+  "Auditory", "Relaxation", "Quality of Life", "Emotional"
+)
+
+tfi_domains <- tibble(
+  Domain = c("Auditory", "Cognitive", "Emotional", "Intrusive", 
+             "Quality of Life", "Relaxation", "Sense of Control", "Sleep"),
+  Definition = c(
+    "Evaluates problems hearing clearly due to tinnitus.",
+    "Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+    "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+    "Measures how much the tinnitus intrudes on consciousness and daily life.",
+    "Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+    "Examines the impact of tinnitus on relaxation and quiet activities.",
+    "Determines how much control the patient feels they have over their tinnitus.",
+    "Assesses the extent to which tinnitus interferes with sleep."
+  )
+)
+
+# ==================================================
 # 2a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = F) ----
 # ==================================================
 
@@ -372,6 +453,9 @@ axis(2, at = seq(0, y_max, by = 1), labels = seq(0, y_max, by = 1))
 
 # Add a horizontal line at y = 1
 abline(h = 1, col = "red", lty = 2, lwd = 2)  # Dashed red line
+
+
+
 
 # ==================================================
 # 7. COMPUTe SEMANTIC SIMILARITY ----
@@ -871,6 +955,16 @@ summary(ega_result)
 # ✅ Visualize the EGA Network
 plot(ega_result, title = "Latent Semantic Graph Analysis for TFI")
 
+
+
+bootstrapped_ega <- bootEGA(ega_input, model = "glasso", iter = 500, seed = 99, type = "resampling",
+                            algorithm = "walktrap", na.data = "pairwise", uni.method = "expand")
+
+compare_ega <- compare.EGA.plots(
+  ega_result, bootstrapped_ega,
+  labels = c("Empirical", "Bootstrap")
+)
+
 # Transpose the embeddings to ensure columns represent items
 ega_matrix <- t(as.matrix(tfi_embeddings_texts_df))
 
@@ -880,7 +974,311 @@ str(ega_matrix)
 # Ensure correct dimensions (should now be 768 x 25)
 dim(ega_matrix)  # Should return (768, 25)
 
-bootstrapped_ega <- bootEGA(ega_input, model = "glasso", iter = 500, seed = 2, type = "resampling",
+# ✅ Run Exploratory Graph Analysis (EGA)
+ega_result <- EGA(ega_matrix, model = "glasso")  # Graphical LASSO model
+
+bootstrapped_ega <- bootEGA(ega_matrix, model = "glasso", iter = 500, seed = 99, type = "resampling",
                             algorithm = "walktrap", na.data = "pairwise", uni.method = "expand")
 
+bootstrapped_ega$stability$item.stability
+
+# # ================================================================
+# # 2c. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = T) ----
+# # ================================================================
+# 
+# # zeroshot_results <- data.frame(
+# #   Item = character(),
+# #   Predicted_Domain = character(),
+# #   Confidence = numeric(),
+# #   stringsAsFactors = FALSE
+# # )
+# # 
+# # for (i in 1:length(tfi_data$QuestionText)) {
+# #   test_result <- textZeroShot(tfi_data$QuestionText[i], tfi_domains$Definition, multi_label = TRUE)
+# #   test_result$Item <- tfi_data$QuestionText[i]
+# #   zeroshot_results <- rbind(zeroshot_results, test_result)
+# # }
+# 
+# # ==================================================
+# # 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# # ==================================================
+# 
+# 
+# # Pivot labels into long format, keeping Item for context
+# zeroshot_results_long <- zeroshot_results %>%
+#   pivot_longer(
+#     cols = starts_with("labels_x"), 
+#     names_to = "Label_Index",
+#     values_to = "Predicted_Domain"
+#   ) %>%
+#   mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
+#   select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
+# 
+# # Pivot scores separately
+# zeroshot_scores_multi_long <- zeroshot_results %>%
+#   pivot_longer(
+#     cols = starts_with("scores_x_"), 
+#     names_to = "Score_Index",
+#     values_to = "Confidence"
+#   ) %>%
+#   select(sequence, Score_Index, Confidence) # Keep only necessary columns
+# 
+# 
+# # Perform the join using both sequence and Score_Index
+# zeroshot_results_long <- zeroshot_results_long %>%
+#   left_join(zeroshot_scores_multi_long, by = c("sequence", "Score_Index")) %>%
+#   arrange(sequence, -Confidence) %>%
+#   select(Item, Predicted_Domain, Confidence)
+# 
+# # Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
+# zeroshot_results_long <- zeroshot_results_long %>%
+#   left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
+#   select(QuestionID, Item, Predicted_Domain, Confidence) %>%
+#   arrange(QuestionID)
+# 
+# # Using the tfi_data for reference, add predicted domain to classification_results_long
+# zeroshot_results_long <- zeroshot_results_long %>%
+#   left_join(tfi_data, by = c("Item" = "QuestionText")) 
+# 
+# #drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
+# zeroshot_results_long <- zeroshot_results_long %>%
+#   rename(QuestionID = QuestionID.x) %>%
+#   select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
+# 
+# # ✅ Add Intended and Predicted Domain Definitions (Label + Definition)
+# zeroshot_results_long <- zeroshot_results_long %>%
+#   mutate(
+#     # Intended Domain Definitions
+#     Intended_Domain_Definition = case_when(
+#       IntendedDomain == "Auditory" ~ "Auditory: Evaluates problems hearing clearly due to tinnitus.",
+#       IntendedDomain == "Cognitive" ~ "Cognitive: Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+#       IntendedDomain == "Emotional" ~ "Emotional: Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+#       IntendedDomain == "Intrusive" ~ "Intrusive: Measures how much the tinnitus intrudes on consciousness and daily life.",
+#       IntendedDomain == "Quality of Life" ~ "Quality of Life: Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+#       IntendedDomain == "Relaxation" ~ "Relaxation: Examines the impact of tinnitus on relaxation and quiet activities.",
+#       IntendedDomain == "Sense of Control" ~ "Sense of Control: Determines how much control the patient feels they have over their tinnitus.",
+#       IntendedDomain == "Sleep" ~ "Sleep: Assesses the extent to which tinnitus interferes with sleep.",
+#       TRUE ~ NA_character_
+#     ),
+#     
+#     # Predicted Domain Definitions
+#     Predicted_Domain_Definition = case_when(
+#       Predicted_Domain == "Evaluates problems hearing clearly due to tinnitus." ~ "Auditory: Evaluates problems hearing clearly due to tinnitus.",
+#       Predicted_Domain == "Captures difficulties in concentration and cognitive tasks due to tinnitus." ~ "Cognitive: Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+#       Predicted_Domain == "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression)." ~ "Emotional: Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+#       Predicted_Domain == "Measures how much the tinnitus intrudes on consciousness and daily life." ~ "Intrusive: Measures how much the tinnitus intrudes on consciousness and daily life.",
+#       Predicted_Domain == "Measures the effect of tinnitus on overall enjoyment and engagement in life activities." ~ "Quality of Life: Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+#       Predicted_Domain == "Examines the impact of tinnitus on relaxation and quiet activities." ~ "Relaxation: Examines the impact of tinnitus on relaxation and quiet activities.",
+#       Predicted_Domain == "Determines how much control the patient feels they have over their tinnitus." ~ "Sense of Control: Determines how much control the patient feels they have over their tinnitus.",
+#       Predicted_Domain == "Assesses the extent to which tinnitus interferes with sleep." ~ "Sleep: Assesses the extent to which tinnitus interferes with sleep.",
+#       TRUE ~ NA_character_
+#     )
+#   )
+
+
+#write.csv(zeroshot_results_long, "TFI_zeroshot_domains_results_multilabel.csv", row.names = FALSE)
+
+
+# ==================================================
+# 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS (FLIPPED & REFINED) ----
+# ==================================================
+
+zeroshot_results_long <- read.csv("TFI_zeroshot_domains_results_multilabel.csv")
+
+for (item in unique(zeroshot_results_long$Item)) {
+  
+  # ✅ Filter item data
+  item_data <- zeroshot_results_long %>% filter(Item == item)
+  item_number <- unique(item_data$QuestionID)  # ✅ Corrected
+  intended_domain <- unique(item_data$IntendedDomain)  # ✅ Corrected
+  
+  # ✅ Wrap the title for better readability
+  wrapped_title <- str_wrap(paste("Zero-Shot Classification (multi-label) for Item", item_number, ":", item), width = 80)
+  
+  # ✅ Generate flipped plot
+  p <- ggplot(item_data, aes(
+    y = reorder(Predicted_Domain_Definition, Confidence),  # ✅ Flip to y-axis
+    x = Confidence
+  )) +
+    geom_bar(stat = "identity", width = 0.6) +
+    
+    # ✅ Convert high-confidence threshold into a vertical reference line
+    geom_vline(xintercept = 0.7, linetype = "dashed", color = "darkgrey", linewidth = 1) +  
+    
+    # ✅ Position threshold label in the bottom right of each plot
+    annotate("text", 
+             y = 0.8,   # ✅ Near the bottom of the y-axis
+             x = 0.72,   # ✅ Slightly past the reference line
+             label = "High Confidence\nThreshold (0.7)",  
+             color = "darkgrey", hjust = 0, size = 3.2) +  
+    
+    theme_minimal() +
+    
+    # ✅ Adjust confidence score scale with 0.05 increments
+    scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.05)) +
+    
+    labs(
+      title = wrapped_title,  # ✅ Wrapped title for better readability
+      subtitle = paste("Intended Domain:", intended_domain),
+      x = "Confidence Score",
+      y = "Predicted Domain Definition"  # ✅ Adjusted for flipped axis
+    ) +
+    theme(
+      axis.text.y = element_text(size = 8),  # ✅ Increase readability for long domain text
+      axis.text.x = element_text(size = 8, angle = 45, hjust = 1),  # ✅ Rotate x-axis labels
+      legend.position = "none"  # ✅ Removed unnecessary legend
+    )
+  
+  print(p)
+}
+
+# ================================================================
+# 2c. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = F) ----
+# ================================================================
+
+zeroshot_results <- data.frame(
+  Item = character(),
+  Predicted_Domain = character(),
+  Confidence = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (i in 1:length(tfi_data$QuestionText)) {
+  test_result <- textZeroShot(tfi_data$QuestionText[i], tfi_domains$Definition, multi_label = FALSE)
+  test_result$Item <- tfi_data$QuestionText[i]
+  zeroshot_results <- rbind(zeroshot_results, test_result)
+}
+
+# ==================================================
+# 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# ==================================================
+
+
+# Pivot labels into long format, keeping Item for context
+zeroshot_results_long <- zeroshot_results %>%
+  pivot_longer(
+    cols = starts_with("labels_x"), 
+    names_to = "Label_Index",
+    values_to = "Predicted_Domain"
+  ) %>%
+  mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
+  select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
+
+# Pivot scores separately
+zeroshot_scores_multi_long <- zeroshot_results %>%
+  pivot_longer(
+    cols = starts_with("scores_x_"), 
+    names_to = "Score_Index",
+    values_to = "Confidence"
+  ) %>%
+  select(sequence, Score_Index, Confidence) # Keep only necessary columns
+
+
+# Perform the join using both sequence and Score_Index
+zeroshot_results_long <- zeroshot_results_long %>%
+  left_join(zeroshot_scores_multi_long, by = c("sequence", "Score_Index")) %>%
+  arrange(sequence, -Confidence) %>%
+  select(Item, Predicted_Domain, Confidence)
+
+# Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
+zeroshot_results_long <- zeroshot_results_long %>%
+  left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
+  select(QuestionID, Item, Predicted_Domain, Confidence) %>%
+  arrange(QuestionID)
+
+# Using the tfi_data for reference, add predicted domain to classification_results_long
+zeroshot_results_long <- zeroshot_results_long %>%
+  left_join(tfi_data, by = c("Item" = "QuestionText")) 
+
+#drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
+zeroshot_results_long <- zeroshot_results_long %>%
+  rename(QuestionID = QuestionID.x) %>%
+  select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
+
+# ✅ Add Intended and Predicted Domain Definitions (Label + Definition)
+zeroshot_results_long <- zeroshot_results_long %>%
+  mutate(
+    # Intended Domain Definitions
+    Intended_Domain_Definition = case_when(
+      IntendedDomain == "Auditory" ~ "Auditory: Evaluates problems hearing clearly due to tinnitus.",
+      IntendedDomain == "Cognitive" ~ "Cognitive: Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+      IntendedDomain == "Emotional" ~ "Emotional: Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+      IntendedDomain == "Intrusive" ~ "Intrusive: Measures how much the tinnitus intrudes on consciousness and daily life.",
+      IntendedDomain == "Quality of Life" ~ "Quality of Life: Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+      IntendedDomain == "Relaxation" ~ "Relaxation: Examines the impact of tinnitus on relaxation and quiet activities.",
+      IntendedDomain == "Sense of Control" ~ "Sense of Control: Determines how much control the patient feels they have over their tinnitus.",
+      IntendedDomain == "Sleep" ~ "Sleep: Assesses the extent to which tinnitus interferes with sleep.",
+      TRUE ~ NA_character_
+    ),
+    
+    # Predicted Domain Definitions
+    Predicted_Domain_Definition = case_when(
+      Predicted_Domain == "Evaluates problems hearing clearly due to tinnitus." ~ "Auditory: Evaluates problems hearing clearly due to tinnitus.",
+      Predicted_Domain == "Captures difficulties in concentration and cognitive tasks due to tinnitus." ~ "Cognitive: Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+      Predicted_Domain == "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression)." ~ "Emotional: Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+      Predicted_Domain == "Measures how much the tinnitus intrudes on consciousness and daily life." ~ "Intrusive: Measures how much the tinnitus intrudes on consciousness and daily life.",
+      Predicted_Domain == "Measures the effect of tinnitus on overall enjoyment and engagement in life activities." ~ "Quality of Life: Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+      Predicted_Domain == "Examines the impact of tinnitus on relaxation and quiet activities." ~ "Relaxation: Examines the impact of tinnitus on relaxation and quiet activities.",
+      Predicted_Domain == "Determines how much control the patient feels they have over their tinnitus." ~ "Sense of Control: Determines how much control the patient feels they have over their tinnitus.",
+      Predicted_Domain == "Assesses the extent to which tinnitus interferes with sleep." ~ "Sleep: Assesses the extent to which tinnitus interferes with sleep.",
+      TRUE ~ NA_character_
+    )
+  )
+
+
+#write.csv(zeroshot_results_long, "TFI_zeroshot_domains_results_singlelabel.csv", row.names = FALSE)
+
+
+# ==================================================
+# 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS (FLIPPED & REFINED) ----
+# ==================================================
+
+zeroshot_results_long <- read.csv("TFI_zeroshot_domains_results_singlelabel.csv")
+
+for (item in unique(zeroshot_results_long$Item)) {
+  
+  # ✅ Filter item data
+  item_data <- zeroshot_results_long %>% filter(Item == item)
+  item_number <- unique(item_data$QuestionID)  # ✅ Corrected
+  intended_domain <- unique(item_data$IntendedDomain)  # ✅ Corrected
+  
+  # ✅ Wrap the title for better readability
+  wrapped_title <- str_wrap(paste("Zero-Shot Classification (single-label) for Item", item_number, ":", item), width = 80)
+  
+  # ✅ Generate flipped plot
+  p <- ggplot(item_data, aes(
+    y = reorder(Predicted_Domain_Definition, Confidence),  # ✅ Flip to y-axis
+    x = Confidence
+  )) +
+    geom_bar(stat = "identity", width = 0.6) +
+    
+    # ✅ Convert high-confidence threshold into a vertical reference line
+    geom_vline(xintercept = 0.7, linetype = "dashed", color = "darkgrey", linewidth = 1) +  
+    
+    # ✅ Position threshold label in the bottom right of each plot
+    annotate("text", 
+             y = 0.8,   # ✅ Near the bottom of the y-axis
+             x = 0.72,   # ✅ Slightly past the reference line
+             label = "High Confidence\nThreshold (0.7)",  
+             color = "darkgrey", hjust = 0, size = 3.2) +  
+    
+    theme_minimal() +
+    
+    # ✅ Adjust confidence score scale with 0.05 increments
+    scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.05)) +
+    
+    labs(
+      title = wrapped_title,  # ✅ Wrapped title for better readability
+      subtitle = paste("Intended Domain:", intended_domain),
+      x = "Confidence Score",
+      y = "Predicted Domain Definition"  # ✅ Adjusted for flipped axis
+    ) +
+    theme(
+      axis.text.y = element_text(size = 8),  # ✅ Increase readability for long domain text
+      axis.text.x = element_text(size = 8, angle = 45, hjust = 1),  # ✅ Rotate x-axis labels
+      legend.position = "none"  # ✅ Removed unnecessary legend
+    )
+  
+  print(p)
+}
 
