@@ -9,72 +9,7 @@ library(tidyr)      # Data restructuring
 library(stringr)    # String operations
 library(tidytext)   # Text processing
 library(viridis)    # Color palettes
-
-# ==================================================
-# 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
-# ==================================================
-
-tfi_data <- data.frame(
-  QuestionID = 1:25,
-  QuestionText = c(
-    # Intrusive (I)
-    "What percentage of your time awake were you consciously aware of your tinnitus?",
-    "How strong or loud was your tinnitus?",
-    "What percentage of your time awake were you annoyed by your tinnitus?",
-    
-    # Sense of Control (SC)
-    "Did you feel in control in regard to your tinnitus?",
-    "How easy was it for you to cope with your tinnitus?",
-    "How easy was it for you to ignore your tinnitus?",
-    
-    # Cognitive (C)
-    "How much did your tinnitus interfere with your ability to concentrate?",
-    "How much did your tinnitus interfere with your ability to think clearly?",
-    "How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?",
-    
-    # Sleep (SL)
-    "How often did your tinnitus make it difficult to fall asleep or stay asleep?",
-    "How often did your tinnitus cause you difficulty in getting as much sleep as you needed?",
-    "How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?",
-    
-    # Auditory (A)
-    "How much has your tinnitus interfered with your ability to hear clearly?",
-    "How much has your tinnitus interfered with your ability to understand people who are talking?",
-    "How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?",
-    
-    # Relaxation (R)
-    "How much has your tinnitus interfered with your quiet resting activities?",
-    "How much has your tinnitus interfered with your ability to relax?",
-    "How much has your tinnitus interfered with your ability to enjoy peace and quiet?",
-    
-    # Quality of Life (Q)
-    "How much has your tinnitus interfered with your enjoyment of social activities?",
-    "How much has your tinnitus interfered with your enjoyment of life?",
-    "How much has your tinnitus interfered with your relationships with family, friends, and other people?",
-    "How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?",
-    
-    # Emotional (E)
-    "How anxious or worried has your tinnitus made you feel?",
-    "How bothered or upset have you been because of your tinnitus?",
-    "How depressed were you because of your tinnitus?"
-  ),
-  IntendedDomain = c(
-    rep("Intrusive", 3),
-    rep("Sense of Control", 3),
-    rep("Cognitive", 3),
-    rep("Sleep", 3),
-    rep("Auditory", 3),
-    rep("Relaxation", 3),
-    rep("Quality of Life", 4),
-    rep("Emotional", 3)
-  ),
-  stringsAsFactors = FALSE
-)
-
-candidate_domains <- c(
-  "Intrusive", "Sense of Control", "Cognitive", "Sleep", 
-  "Auditory", "Relaxation", "Quality of Life", "Emotional"
-)
+library(EGAnet)  # EGA package for network analysis
 
 # ==================================================
 # 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
@@ -158,7 +93,7 @@ tfi_domains <- tibble(
 )
 
 # ==================================================
-# 2a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = F) ----
+# 2a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ACCORDING TO DOMAIN LABELS (e.g. "Intrusive") (multi_label = F) ----
 # ==================================================
 
 # classification_results <- data.frame(
@@ -175,78 +110,58 @@ tfi_domains <- tibble(
 # }
 
 # ==================================================
-# 3a. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# 2b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
 # ==================================================
 
-# Pivot labels into long format, keeping Item for context
-classification_results_long <- classification_results %>%
-  pivot_longer(
-    cols = starts_with("labels_x"), 
-    names_to = "Label_Index",
-    values_to = "Predicted_Domain"
-  ) %>%
-  mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
-  select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
-
-# Pivot scores separately
-classification_scores_long <- classification_results %>%
-  pivot_longer(
-    cols = starts_with("scores_x_"), 
-    names_to = "Score_Index",
-    values_to = "Confidence"
-  ) %>%
-  select(sequence, Score_Index, Confidence) # Keep only necessary columns
-
-
-# Perform the join using both sequence and Score_Index
-classification_results_long <- classification_results_long %>%
-  left_join(classification_scores_long, by = c("sequence", "Score_Index")) %>%
-  arrange(sequence, -Confidence) %>%
-  select(Item, Predicted_Domain, Confidence)
-
-# Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
-classification_results_long <- classification_results_long %>%
-  left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
-  select(QuestionID, Item, Predicted_Domain, Confidence) %>%
-  arrange(QuestionID)
-
-# Using the tfi_data for reference, add predicted domain to classification_results_long
-classification_results_long <- classification_results_long %>%
-  left_join(tfi_data, by = c("Item" = "QuestionText")) 
-
-#drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
-classification_results_long <- classification_results_long %>%
-  rename(QuestionID = QuestionID.x) %>%
-  select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
+# # Pivot labels into long format, keeping Item for context
+# classification_results_long <- classification_results %>%
+#   pivot_longer(
+#     cols = starts_with("labels_x"), 
+#     names_to = "Label_Index",
+#     values_to = "Predicted_Domain"
+#   ) %>%
+#   mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
+#   select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
+# 
+# # Pivot scores separately
+# classification_scores_long <- classification_results %>%
+#   pivot_longer(
+#     cols = starts_with("scores_x_"), 
+#     names_to = "Score_Index",
+#     values_to = "Confidence"
+#   ) %>%
+#   select(sequence, Score_Index, Confidence) # Keep only necessary columns
+# 
+# 
+# # Perform the join using both sequence and Score_Index
+# classification_results_long <- classification_results_long %>%
+#   left_join(classification_scores_long, by = c("sequence", "Score_Index")) %>%
+#   arrange(sequence, -Confidence) %>%
+#   select(Item, Predicted_Domain, Confidence)
+# 
+# # Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
+# classification_results_long <- classification_results_long %>%
+#   left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
+#   select(QuestionID, Item, Predicted_Domain, Confidence) %>%
+#   arrange(QuestionID)
+# 
+# # Using the tfi_data for reference, add predicted domain to classification_results_long
+# classification_results_long <- classification_results_long %>%
+#   left_join(tfi_data, by = c("Item" = "QuestionText")) 
+# 
+# #drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
+# classification_results_long <- classification_results_long %>%
+#   rename(QuestionID = QuestionID.x) %>%
+#   select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
 
 #write.csv(classification_results_long, "TFI_ZeroShot_Classifications_Long.csv", row.names = FALSE)
 
 #read saved results
 classification_results_long <- read.csv("TFI_ZeroShot_Classifications_Long.csv")
 
-# ==================================================
-# 4a. VISUALIZATION: STACKED BAR CHARTS ----
-# ==================================================
-
-ggplot(classification_results_long, aes(
-  x = reorder(Item, -Confidence, median), 
-  y = Confidence, 
-  fill = Predicted_Domain
-)) +
-  geom_bar(stat = "identity", position = "stack") +  
-  facet_wrap(~ IntendedDomain, scales = "free_y", ncol = 1) +  
-  coord_flip() +  
-  theme_minimal() +
-  labs(
-    title = "Confidence Scores for Predicted Domains per TFI Item",
-    x = "TFI Item",
-    y = "Confidence Score",
-    fill = "Predicted Domain"
-  ) +
-  theme(axis.text.y = element_text(size = 8), legend.position = "bottom")
 
 # ==================================================
-# 5a. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
+# 2c. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
 # ==================================================
 
 for (item in unique(classification_results_long$Item)) {
@@ -286,7 +201,7 @@ correctly_classified <- classification_results_long %>%
   summarise(Correctly_Classified = n())
 
 # ================================================================
-# 2b. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = T) ----
+# 3a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ACCORDING TO DOMAIN LABELS (e.g. "Intrusive") (multi_label = T) ----
 # ================================================================
 
 # classification_results_multi <- data.frame(
@@ -306,53 +221,53 @@ correctly_classified <- classification_results_long %>%
 # 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
 # ==================================================
 
-# Pivot labels into long format, keeping Item for context
-classification_results_multi_long <- classification_results_multi %>%
-  pivot_longer(
-    cols = starts_with("labels_x"), 
-    names_to = "Label_Index",
-    values_to = "Predicted_Domain"
-  ) %>%
-  mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
-  select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
-
-# Pivot scores separately
-classification_scores_multi_long <- classification_results_multi %>%
-  pivot_longer(
-    cols = starts_with("scores_x_"), 
-    names_to = "Score_Index",
-    values_to = "Confidence"
-  ) %>%
-  select(sequence, Score_Index, Confidence) # Keep only necessary columns
-
-
-# Perform the join using both sequence and Score_Index
-classification_results_multi_long <- classification_results_multi_long %>%
-  left_join(classification_scores_multi_long, by = c("sequence", "Score_Index")) %>%
-  arrange(sequence, -Confidence) %>%
-  select(Item, Predicted_Domain, Confidence)
-
-# Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
-classification_results_multi_long <- classification_results_multi_long %>%
-  left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
-  select(QuestionID, Item, Predicted_Domain, Confidence) %>%
-  arrange(QuestionID)
-
-# Using the tfi_data for reference, add predicted domain to classification_results_long
-classification_results_multi_long <- classification_results_multi_long %>%
-  left_join(tfi_data, by = c("Item" = "QuestionText")) 
-
-#drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
-classification_results_multi_long <- classification_results_multi_long %>%
-  rename(QuestionID = QuestionID.x) %>%
-  select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
-
-#write.csv(classification_results_multi_long, "TFI_ZeroShot_Classifications_Multi_Long.csv", row.names = FALSE)
+# # Pivot labels into long format, keeping Item for context
+# classification_results_multi_long <- classification_results_multi %>%
+#   pivot_longer(
+#     cols = starts_with("labels_x"), 
+#     names_to = "Label_Index",
+#     values_to = "Predicted_Domain"
+#   ) %>%
+#   mutate(Score_Index = gsub("labels", "scores", Label_Index)) %>%
+#   select(sequence, Item, Label_Index, Predicted_Domain, Score_Index) # Retain Score_Index for merging
+# 
+# # Pivot scores separately
+# classification_scores_multi_long <- classification_results_multi %>%
+#   pivot_longer(
+#     cols = starts_with("scores_x_"), 
+#     names_to = "Score_Index",
+#     values_to = "Confidence"
+#   ) %>%
+#   select(sequence, Score_Index, Confidence) # Keep only necessary columns
+# 
+# 
+# # Perform the join using both sequence and Score_Index
+# classification_results_multi_long <- classification_results_multi_long %>%
+#   left_join(classification_scores_multi_long, by = c("sequence", "Score_Index")) %>%
+#   arrange(sequence, -Confidence) %>%
+#   select(Item, Predicted_Domain, Confidence)
+# 
+# # Using the tfi_data for reference, add question ID to classification_results_long and arrange by QuestionID
+# classification_results_multi_long <- classification_results_multi_long %>%
+#   left_join(tfi_data, by = c("Item" = "QuestionText")) %>%
+#   select(QuestionID, Item, Predicted_Domain, Confidence) %>%
+#   arrange(QuestionID)
+# 
+# # Using the tfi_data for reference, add predicted domain to classification_results_long
+# classification_results_multi_long <- classification_results_multi_long %>%
+#   left_join(tfi_data, by = c("Item" = "QuestionText")) 
+# 
+# #drop rename to QuestionID.x to QuestionID, drop QuestionID.y, and select item, questionID, item, intended domain, predicted domain, and confidence
+# classification_results_multi_long <- classification_results_multi_long %>%
+#   rename(QuestionID = QuestionID.x) %>%
+#   select(QuestionID, Item, IntendedDomain, Predicted_Domain, Confidence)
+# 
+# #write.csv(classification_results_multi_long, "TFI_ZeroShot_Classifications_Multi_Long.csv", row.names = FALSE)
 
 classification_results_multi_long <- read.csv("TFI_ZeroShot_Classifications_Multi_Long.csv")
 
 # ==================================================
-# 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
+# 3c. VISUALIZATION: INDIVIDUAL ITEM PLOTS ----
 # ==================================================
 
 for (item in unique(classification_results_multi_long$Item)) {
@@ -409,56 +324,9 @@ high_confidence_incorrect_multi <- classification_results_multi_long %>%
   filter(Confidence > 0.7) %>%
   filter(Predicted_Domain != IntendedDomain)
 
-# ==================================================
-# 5. LEXICAL EMBEDDING PSYCHOMETRICS (LEP) ----
-# ==================================================
-
-# tfi_embeddings <- textEmbed(
-#   texts = tfi_data$QuestionText,  # Full TFI question text
-#   aggregation_from_layers_to_tokens = "mean",  # Aggregate across layers
-#   aggregation_from_tokens_to_texts = "mean",  # Aggregate all token embeddings to one per question
-#   keep_token_embeddings = FALSE  # Only store full sentence embeddings
-# )
-
-# saveRDS(tfi_embeddings$texts, "TFI_Embeddings_Sentences.rds")
-
-tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
-
-tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
-
-items <- as.data.frame(t(tfi_embeddings_texts_df))  # Transpose: Dimensions → Rows, Items → Columns
-
-# Perform PCA on transposed data
-pca_result <- prcomp(items, center = TRUE, scale. = TRUE)
-
-# Extract the eigenvalues from the PCA object
-eigenvalues <- pca_result$sdev^2
-
-# Determine y-axis limits based on max eigenvalue (rounded up)
-y_max <- ceiling(max(eigenvalues))
-
-# Create a scree plot
-plot(eigenvalues, type = "b", pch = 19, col = "blue",
-     xlab = "Principal Component",
-     ylab = "Eigenvalue",
-     main = "Scree Plot of PCA Eigenvalues",
-     xaxt = "n", yaxt = "n",  # Remove default axis ticks
-     ylim = c(0, y_max))  # Set y-axis limits
-
-# Manually add x-axis ticks for all 25 principal components
-axis(1, at = 1:25, labels = 1:25, las = 2)  # `las = 2` rotates labels vertically
-
-# Manually add y-axis ticks at every whole number eigenvalue
-axis(2, at = seq(0, y_max, by = 1), labels = seq(0, y_max, by = 1)) 
-
-# Add a horizontal line at y = 1
-abline(h = 1, col = "red", lty = 2, lwd = 2)  # Dashed red line
-
-
-
 
 # ==================================================
-# 7. COMPUTe SEMANTIC SIMILARITY ----
+# 4. Inter-item Semantic Similarity ----
 # ==================================================
 
 # Compute similarity matrix using cosine similarity
@@ -468,6 +336,9 @@ abline(h = 1, col = "red", lty = 2, lwd = 2)  # Dashed red line
 #   method = "cosine"  # Default is cosine similarity
 # )
 
+# ✅ Load Precomputed TFI Item Embeddings
+tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
+tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
 
 # Initialize an empty dataframe
 similarity_results <- data.frame(
@@ -597,55 +468,7 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
 
 
 # ==================================================
-# 8. SEMANTIC CONSTRUCT MAPPING ----
-# ==================================================
-
-# # Load Precomputed TFI Item Embeddings
-# tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
-# tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
-# 
-# # ✅ Define theoretical domain descriptions (Alphabetically Ordered)
-# tfi_domains <- tibble(
-#   Domain = c("Auditory", "Cognitive", "Emotional", "Intrusive", 
-#              "Quality of Life", "Relaxation", "Sense of Control", "Sleep"),
-#   Definition = c(
-#     "Evaluates problems hearing clearly due to tinnitus.",
-#     "Captures difficulties in concentration and cognitive tasks due to tinnitus.",
-#     "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
-#     "Measures how much the tinnitus intrudes on consciousness and daily life.",
-#     "Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
-#     "Examines the impact of tinnitus on relaxation and quiet activities.",
-#     "Determines how much control the patient feels they have over their tinnitus.",
-#     "Assesses the extent to which tinnitus interferes with sleep."
-#   )
-# )
-# 
-# # recompute Embeddings for Domain Definitions
-# domain_embeddings <- textEmbed(
-#   texts = tfi_domains$Definition, 
-#   model = "bert-base-uncased",
-#   aggregation_from_layers_to_tokens = "mean",
-#   aggregation_from_tokens_to_texts = "mean",
-#   keep_token_embeddings = FALSE
-# )
-# 
-# 
-# 
-# # Convert Domain Embeddings into DataFrame
-# domain_embeddings_df <- as.data.frame(domain_embeddings$texts$texts)
-# 
-# 
-# 
-# # Compute cosine similarity
-# textSimilarity(
-#   x = tfi_embeddings_texts_df[1,],  # Item 1 embeddings
-#   y = domain_embeddings_df[1,],    # Auditory domain embeddings
-#   method = "cosine"
-# )
-
-
-# ==================================================
-# 8. SEMANTIC CONSTRUCT MAPPING ----
+# 5. Construct Semantic Mapping ----
 # ==================================================
 
 # ✅ Load Precomputed TFI Item Embeddings
@@ -790,76 +613,6 @@ semantic_mapping_results <- semantic_mapping_results %>%
     Theta = acos(pmin(1, abs(SimilarityScore))) * (180 / pi)  # Convert to degrees
   )
 
-# # Define the target item (e.g., Item 1)
-# target_item_id <- 1  
-# 
-# # Extract question content for title
-# target_question_text <- semantic_mapping_results %>%
-#   filter(QuestionID == target_item_id) %>%
-#   pull(QuestionText) %>%
-#   unique()
-# 
-# # Extract intended domain for subtitle
-# target_item_domain <- semantic_mapping_results %>%
-#   filter(QuestionID == target_item_id) %>%
-#   pull(IntendedDomain) %>%
-#   unique()
-# 
-# # Compute mean similarity score for other items within the same domain (excluding the focal item)
-# mean_other_items_similarity <- semantic_mapping_results %>%
-#   filter(IntendedDomain == target_item_domain & QuestionID != target_item_id) %>%
-#   summarise(mean_similarity = mean(SimilarityScore, na.rm = TRUE)) %>%
-#   pull(mean_similarity)
-# 
-# # Format question text for title (wrap for readability)
-# wrapped_title <- str_wrap(paste0("Semantic Construct Similarity for Item ", target_item_id, ": ", target_question_text), width = 80)
-# 
-# # Plot for the target item
-# semantic_mapping_results %>% 
-#   filter(QuestionID == target_item_id) %>%
-#   arrange(desc(SimilarityScore)) %>%  # Order by descending similarity
-#   ggplot(aes(x = reorder(ComparedDomain, -SimilarityScore), y = SimilarityScore)) +
-#   geom_point(size = 4, alpha = 0.8, color = "blue") +
-#   geom_hline(yintercept = mean_other_items_similarity, linetype = "dashed", color = "black", size = 1) +  # Black reference line
-#   theme_minimal() +
-#   scale_y_continuous(limits = c(0, 1)) +  # Fix Y-axis range to 0-1
-#   labs(
-#     title = wrapped_title,  # Wrapped title for readability
-#     subtitle = paste("Intended Domain:", target_item_domain, 
-#                      "\nBlack Line = Mean Similarity Score for Other Items in the Same Domain"),
-#     x = "Compared Domain Definition",
-#     y = "Similarity Score"
-#   ) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
-
-# ✅ Preprocess to include Domain Definitions in Labels
-semantic_mapping_results <- semantic_mapping_results %>%
-  mutate(ComparedDomainLabel = paste0(ComparedDomain, " - ", DomainDefinition))  # Combine domain name + definition
-
-# ✅ Format question text for title (wrapped)
-wrapped_title <- str_wrap(paste0("Semantic Construct Similarity for Item ", target_item_id, ": ", target_question_text), width = 80)
-
-# ✅ Generate and print plot (Flipped Axes & Highest Similarity at Bottom)
-plot <- semantic_mapping_results %>% 
-  filter(QuestionID == target_item_id) %>%
-  arrange(desc(SimilarityScore)) %>%  # ✅ Highest similarity at bottom
-  ggplot(aes(y = reorder(ComparedDomainLabel, -SimilarityScore), x = SimilarityScore)) +  
-  geom_point(size = 4, alpha = 0.8, color = "blue") +
-  geom_vline(xintercept = mean_other_items_similarity, linetype = "dashed", color = "black", size = 1) +  
-  theme_minimal() +
-  scale_x_reverse(limits = c(1, 0), breaks = seq(1, 0, by = -0.05)) +  # ✅ Reverse X-axis (1 to 0, left to right)
-  labs(
-    title = wrapped_title,  
-    subtitle = paste("Intended Domain:", target_item_domain, 
-                     "\nDashed Black Line = Mean Similarity Score for Other Items in the Same Domain"),
-    x = "Similarity Score (Higher = Left, Lower = Right)",  # ✅ Clarify reversed scale
-    y = "Compared Domain Definition"  
-  ) +
-  theme(axis.text.x = element_text(size = 10),  
-        axis.text.y = element_text(size = 10),  
-        legend.position = "bottom")  
-
-print(plot)  # ✅ Display plot in RStudio
 
 
 # ✅ Preprocess to include Domain Definitions in Labels
@@ -925,65 +678,10 @@ domain_frequency <- highest_similarity_domain %>%
   group_by(Highest_Similarity_Domain) %>%
   summarise(Frequency = n())
 
-# ================================================================
-# 6. LATENT EMBEDDING GRAPH ANALYSIS (LEGA) USING EGA() ----
-# ================================================================
 
-# ✅ Load required packages
-library(EGAnet)  # EGA package for network analysis
-
-# ✅ Load zero-shot classification results
-classification_results_multi_long <- read.csv("TFI_ZeroShot_Classifications_Multi_Long.csv")
-
-# ✅ Pivot the dataset into wide format
-classification_results_wide <- classification_results_multi_long %>%
-  pivot_wider(names_from = Predicted_Domain, values_from = Confidence, values_fill = 0) %>%
-  arrange(QuestionID)  # Ensure consistent order
-
-# ✅ Convert to matrix format for EGA()
-ega_input<- classification_results_wide %>%
-  select(-c(QuestionID, Item, IntendedDomain))
-
-#rownames(ega_input) <- classification_results_wide$QuestionID  # Assign rownames as QuestionID
-
-# ✅ Run Exploratory Graph Analysis (EGA)
-ega_result <- EGA(ega_input, model = "glasso")  # Graphical LASSO model
-
-# ✅ Print Summary
-summary(ega_result)
-
-# ✅ Visualize the EGA Network
-plot(ega_result, title = "Latent Semantic Graph Analysis for TFI")
-
-
-
-bootstrapped_ega <- bootEGA(ega_input, model = "glasso", iter = 500, seed = 99, type = "resampling",
-                            algorithm = "walktrap", na.data = "pairwise", uni.method = "expand")
-
-compare_ega <- compare.EGA.plots(
-  ega_result, bootstrapped_ega,
-  labels = c("Empirical", "Bootstrap")
-)
-
-# Transpose the embeddings to ensure columns represent items
-ega_matrix <- t(as.matrix(tfi_embeddings_texts_df))
-
-# Check structure before proceeding
-str(ega_matrix)
-
-# Ensure correct dimensions (should now be 768 x 25)
-dim(ega_matrix)  # Should return (768, 25)
-
-# ✅ Run Exploratory Graph Analysis (EGA)
-ega_result <- EGA(ega_matrix, model = "glasso")  # Graphical LASSO model
-
-bootstrapped_ega <- bootEGA(ega_matrix, model = "glasso", iter = 500, seed = 99, type = "resampling",
-                            algorithm = "walktrap", na.data = "pairwise", uni.method = "expand")
-
-bootstrapped_ega$stability$item.stability
 
 # # ================================================================
-# # 2c. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = T) ----
+# # 6a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ACCORDING TO DOMAIN DESCRIPTION in MEIKLE et al. 2012) (multi_label = T) ----
 # # ================================================================
 # 
 # # zeroshot_results <- data.frame(
@@ -1000,7 +698,7 @@ bootstrapped_ega$stability$item.stability
 # # }
 # 
 # # ==================================================
-# # 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# # 6b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
 # # ==================================================
 # 
 # 
@@ -1080,7 +778,7 @@ bootstrapped_ega$stability$item.stability
 
 
 # ==================================================
-# 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS (FLIPPED & REFINED) ----
+# 6c. VISUALIZATION: INDIVIDUAL ITEM PLOTS (FLIPPED & REFINED) ----
 # ==================================================
 
 zeroshot_results_long <- read.csv("TFI_zeroshot_domains_results_multilabel.csv")
@@ -1133,24 +831,24 @@ for (item in unique(zeroshot_results_long$Item)) {
 }
 
 # ================================================================
-# 2c. ZERO-SHOT CLASSIFICATION OF TFI ITEMS (multi_label = F) ----
+# 7a. ZERO-SHOT CLASSIFICATION OF TFI ITEMS ACCORDING TO DOMAIN DESCRIPTION in MEIKLE et al. 2012) (multi_label = F) ----
 # ================================================================
 
-zeroshot_results <- data.frame(
-  Item = character(),
-  Predicted_Domain = character(),
-  Confidence = numeric(),
-  stringsAsFactors = FALSE
-)
-
-for (i in 1:length(tfi_data$QuestionText)) {
-  test_result <- textZeroShot(tfi_data$QuestionText[i], tfi_domains$Definition, multi_label = FALSE)
-  test_result$Item <- tfi_data$QuestionText[i]
-  zeroshot_results <- rbind(zeroshot_results, test_result)
-}
+# zeroshot_results <- data.frame(
+#   Item = character(),
+#   Predicted_Domain = character(),
+#   Confidence = numeric(),
+#   stringsAsFactors = FALSE
+# )
+# 
+# for (i in 1:length(tfi_data$QuestionText)) {
+#   test_result <- textZeroShot(tfi_data$QuestionText[i], tfi_domains$Definition, multi_label = FALSE)
+#   test_result$Item <- tfi_data$QuestionText[i]
+#   zeroshot_results <- rbind(zeroshot_results, test_result)
+# }
 
 # ==================================================
-# 3b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
+# 7b. DATA TRANSFORMATION: RESTRUCTURING OUTPUT ----
 # ==================================================
 
 
@@ -1230,7 +928,7 @@ zeroshot_results_long <- zeroshot_results_long %>%
 
 
 # ==================================================
-# 4b. VISUALIZATION: INDIVIDUAL ITEM PLOTS (FLIPPED & REFINED) ----
+# 7c. VISUALIZATION: INDIVIDUAL ITEM PLOTS (FLIPPED & REFINED) ----
 # ==================================================
 
 zeroshot_results_long <- read.csv("TFI_zeroshot_domains_results_singlelabel.csv")
@@ -1281,4 +979,138 @@ for (item in unique(zeroshot_results_long$Item)) {
   
   print(p)
 }
+
+zeroshot_results_long <- zeroshot_results_long %>%
+  mutate(
+    # Predicted Domain Definitions
+    predicted_domain_label = case_when(
+      Predicted_Domain == "Evaluates problems hearing clearly due to tinnitus." ~ "Auditory",
+      Predicted_Domain == "Captures difficulties in concentration and cognitive tasks due to tinnitus." ~ "Cognitive",
+      Predicted_Domain == "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression)." ~ "Emotional",
+      Predicted_Domain == "Measures how much the tinnitus intrudes on consciousness and daily life." ~ "Intrusive",
+      Predicted_Domain == "Measures the effect of tinnitus on overall enjoyment and engagement in life activities." ~ "Quality of Life",
+      Predicted_Domain == "Examines the impact of tinnitus on relaxation and quiet activities." ~ "Relaxation",
+      Predicted_Domain == "Determines how much control the patient feels they have over their tinnitus." ~ "Sense of Control",
+      Predicted_Domain == "Assesses the extent to which tinnitus interferes with sleep." ~ "Sleep",
+      TRUE ~ NA_character_
+    )
+  )
+
+# select the largest confidence score for each item as a new dataframe
+largest_confidence <- zeroshot_results_long %>%
+  group_by(QuestionID) %>%
+  filter(Confidence == max(Confidence)) %>%
+  select(QuestionID, predicted_domain_label, Confidence)
+
+# summarise the each predicted_domain_label frequency and arrange by descending frequency
+domain_frequency <- largest_confidence %>%
+  group_by(predicted_domain_label) %>%
+  summarise(Frequency = n()) %>%
+  arrange(desc(Frequency))
+
+# ==================================================
+# 8a. Embedding Dimensionality: PCA ----
+# ==================================================
+
+# tfi_embeddings <- textEmbed(
+#   texts = tfi_data$QuestionText,  # Full TFI question text
+#   aggregation_from_layers_to_tokens = "mean",  # Aggregate across layers
+#   aggregation_from_tokens_to_texts = "mean",  # Aggregate all token embeddings to one per question
+#   keep_token_embeddings = FALSE  # Only store full sentence embeddings
+# )
+
+# saveRDS(tfi_embeddings$texts, "TFI_Embeddings_Sentences.rds")
+
+tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
+
+tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
+
+items <- as.data.frame(t(tfi_embeddings_texts_df))  # Transpose: Dimensions → Rows, Items → Columns
+
+# Perform PCA on transposed data
+pca_result <- prcomp(items, center = TRUE, scale. = TRUE)
+
+# Extract the eigenvalues from the PCA object
+eigenvalues <- pca_result$sdev^2
+
+# Determine y-axis limits based on max eigenvalue (rounded up)
+y_max <- ceiling(max(eigenvalues))
+
+# Create a scree plot
+plot(eigenvalues, type = "b", pch = 19, col = "blue",
+     xlab = "Principal Component",
+     ylab = "Eigenvalue",
+     main = "Scree Plot of PCA Eigenvalues",
+     xaxt = "n", yaxt = "n",  # Remove default axis ticks
+     ylim = c(0, y_max))  # Set y-axis limits
+
+# Manually add x-axis ticks for all 25 principal components
+axis(1, at = 1:25, labels = 1:25, las = 2)  # `las = 2` rotates labels vertically
+
+# Manually add y-axis ticks at every whole number eigenvalue
+axis(2, at = seq(0, y_max, by = 1), labels = seq(0, y_max, by = 1)) 
+
+# Add a horizontal line at y = 1
+abline(h = 1, col = "red", lty = 2, lwd = 2)  # Dashed red line
+
+# ================================================================
+# 8b. Embedding Dimensionality: EGA ----
+# ================================================================
+
+
+# ✅ Load zero-shot classification results
+classification_results_multi_long <- read.csv("TFI_zeroshot_domains_results_multilabel.csv")
+
+classification_results_multi_long <- classification_results_multi_long %>%
+  mutate(
+    # Predicted Domain Definitions
+    Predicted_Domain_Definition = case_when(
+      Predicted_Domain == "Evaluates problems hearing clearly due to tinnitus." ~ "Auditory",
+      Predicted_Domain == "Captures difficulties in concentration and cognitive tasks due to tinnitus." ~ "Cognitive",
+      Predicted_Domain == "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression)." ~ "Emotional",
+      Predicted_Domain == "Measures how much the tinnitus intrudes on consciousness and daily life." ~ "Intrusive",
+      Predicted_Domain == "Measures the effect of tinnitus on overall enjoyment and engagement in life activities." ~ "Quality of Life",
+      Predicted_Domain == "Examines the impact of tinnitus on relaxation and quiet activities." ~ "Relaxation",
+      Predicted_Domain == "Determines how much control the patient feels they have over their tinnitus." ~ "Sense of Control",
+      Predicted_Domain == "Assesses the extent to which tinnitus interferes with sleep." ~ "Sleep",
+      TRUE ~ NA_character_
+    )
+  )
+
+
+# # ✅ Pivot the dataset into wide format
+# classification_results_wide <- classification_results_multi_long %>%
+#   select(QuestionID, Confidence, Predicted_Domain_Definition) %>% 
+#   pivot_wider(names_from = QuestionID, values_from = Confidence) # Ensure consistent order
+# 
+# # create new variable from predicted domain definition that takes all text before":"
+# classification_results_wide$Predicted_Domain_Definition <- gsub(":.*", "", classification_results_wide$Predicted_Domain_Definition)
+# 
+# #rownames(classification_results_wide) <- classification_results_wide$Predicted_Domain_Definition # Assign rownames as QuestionID
+# 
+# # ✅ Convert to matrix format for EGA()
+# ega_input<- classification_results_wide %>%
+#   select(-c(Predicted_Domain_Definition))
+
+
+# Transpose the embeddings to ensure columns represent items
+ega_matrix <- t(as.matrix(tfi_embeddings_texts_df))
+
+# ✅ Run Exploratory Graph Analysis (EGA)
+ega_result <- EGA(ega_matrix, model = "glasso", seed = 99, type = "parametric",
+                  algorithm = "walktrap", na.data = "pairwise", uni.method = "louvain")  # Graphical LASSO model
+
+# ✅ Print Summary
+summary(ega_result)
+
+# ✅ Visualize the EGA Network
+plot(ega_result, title = "Latent Semantic Graph Analysis for TFI")
+
+
+# ✅ Run Exploratory Graph Analysis (EGA)
+ega_result <- EGA(ega_matrix, model = "glasso")  # Graphical LASSO model
+
+bootstrapped_ega <- bootEGA(ega_matrix, model = "glasso", iter = 500, seed = 99, type = "parametric",
+                            algorithm = "walktrap", na.data = "pairwise", uni.method = "louvain")
+
 
