@@ -13,7 +13,7 @@ output:
 Inter-item semantic similarity (ISS) is a psychometric technique that quantifies the semantic similarity between item embeddings in a questionnaire. This technique is particularly useful in the context of health-related quality of life (HRQoL) questionnaires, where items are often designed to measure similar constructs. By quantifying the semantic similarity between items, researchers can gain insights into the underlying structure of the questionnaire and identify potential redundancies or overlaps between items.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, fig.width = 25, fig.height = 10, dpi = 150, eval = TRUE)
+knitr::opts_chunk$set(echo = FALSE, fig.width = 20, fig.height = 15, dpi = 150, eval = TRUE)
 
 
 library(text)       # Primary package for advanced text-based NLP.
@@ -204,11 +204,11 @@ tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
 
 similarity_results_expanded <- read.csv("tfi_items_semantic_similarity.csv")
 
-# Ensure Question2 is a factor with item numbers in labels
+
 similarity_results_expanded$Question2 <- factor(
-  paste0("(", similarity_results_expanded$QuestionID2, ") ", similarity_results_expanded$Question2),
-  levels = unique(paste0("(", similarity_results_expanded$QuestionID2, ") ", similarity_results_expanded$Question2))
+  similarity_results_expanded$Question2, levels = unique(similarity_results_expanded$Question2)
 )
+
 
 for (target_item in unique(similarity_results_expanded$Question1)) {
   # Get the item number for the focal item
@@ -247,6 +247,7 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
     geom_vline(xintercept = mean_cross_theta, linetype = "dashed", color = "grey", size = 1.2, alpha = 0.6) +
     scale_color_viridis_d(option = "H") +
     scale_x_continuous(breaks = seq(0, 90, by = 5)) +
+    scale_y_discrete(labels = function(x) str_wrap(x, width = 100)) +
     theme_minimal() +
     labs(
       title = wrapped_title,
@@ -255,7 +256,7 @@ for (target_item in unique(similarity_results_expanded$Question1)) {
       y = "Comparator TFI Item",
       color = "Comparator Domain"
     ) +
-    theme(axis.text.y = element_text(size = 16), legend.position = "bottom") +
+    theme(axis.text.y = element_text(size = 11), legend.position = "bottom") +
     coord_cartesian(xlim = c(0, 90))
 
   # Display plot
