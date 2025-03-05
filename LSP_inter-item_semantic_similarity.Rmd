@@ -1,0 +1,265 @@
+---
+title: "Latent Semantic Psychometrics: Inter-Item Semantic Similarity"
+author: "Nathan Clarke"
+date: "2025-02-28"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+---
+
+# Background
+
+Inter-item semantic similarity (ISS) is a psychometric technique that quantifies the semantic similarity between item embeddings in a questionnaire. This technique is particularly useful in the context of health-related quality of life (HRQoL) questionnaires, where items are often designed to measure similar constructs. By quantifying the semantic similarity between items, researchers can gain insights into the underlying structure of the questionnaire and identify potential redundancies or overlaps between items.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 25, fig.height = 10, dpi = 150, eval = TRUE)
+
+
+library(text)       # Primary package for advanced text-based NLP.
+library(dplyr)      # Data manipulation
+library(ggplot2)    # Visualization
+library(tidyr)      # Data restructuring
+library(stringr)    # String operations
+library(tidytext)   # Text processing
+library(viridis)    # Color palettes
+library(EGAnet)  # EGA package for network analysis
+
+# 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
+
+tfi_data <- data.frame(
+  QuestionID = 1:25,
+  QuestionText = c(
+    # Intrusive (I)
+    "What percentage of your time awake were you consciously aware of your tinnitus?",
+    "How strong or loud was your tinnitus?",
+    "What percentage of your time awake were you annoyed by your tinnitus?",
+
+    # Sense of Control (SC)
+    "Did you feel in control in regard to your tinnitus?",
+    "How easy was it for you to cope with your tinnitus?",
+    "How easy was it for you to ignore your tinnitus?",
+
+    # Cognitive (C)
+    "How much did your tinnitus interfere with your ability to concentrate?",
+    "How much did your tinnitus interfere with your ability to think clearly?",
+    "How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?",
+
+    # Sleep (SL)
+    "How often did your tinnitus make it difficult to fall asleep or stay asleep?",
+    "How often did your tinnitus cause you difficulty in getting as much sleep as you needed?",
+    "How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?",
+
+    # Auditory (A)
+    "How much has your tinnitus interfered with your ability to hear clearly?",
+    "How much has your tinnitus interfered with your ability to understand people who are talking?",
+    "How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?",
+
+    # Relaxation (R)
+    "How much has your tinnitus interfered with your quiet resting activities?",
+    "How much has your tinnitus interfered with your ability to relax?",
+    "How much has your tinnitus interfered with your ability to enjoy peace and quiet?",
+
+    # Quality of Life (Q)
+    "How much has your tinnitus interfered with your enjoyment of social activities?",
+    "How much has your tinnitus interfered with your enjoyment of life?",
+    "How much has your tinnitus interfered with your relationships with family, friends, and other people?",
+    "How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?",
+
+    # Emotional (E)
+    "How anxious or worried has your tinnitus made you feel?",
+    "How bothered or upset have you been because of your tinnitus?",
+    "How depressed were you because of your tinnitus?"
+  ),
+  IntendedDomain = c(
+    rep("Intrusive", 3),
+    rep("Sense of Control", 3),
+    rep("Cognitive", 3),
+    rep("Sleep", 3),
+    rep("Auditory", 3),
+    rep("Relaxation", 3),
+    rep("Quality of Life", 4),
+    rep("Emotional", 3)
+  ),
+  stringsAsFactors = FALSE
+)
+
+candidate_domains <- c(
+  "Intrusive", "Sense of Control", "Cognitive", "Sleep",
+  "Auditory", "Relaxation", "Quality of Life", "Emotional"
+)
+
+tfi_domains <- tibble(
+  Domain = c(
+    "Auditory", "Cognitive", "Emotional", "Intrusive",
+    "Quality of Life", "Relaxation", "Sense of Control", "Sleep"
+  ),
+  Definition = c(
+    "Evaluates problems hearing clearly due to tinnitus.",
+    "Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+    "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+    "Measures how much the tinnitus intrudes on consciousness and daily life.",
+    "Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+    "Examines the impact of tinnitus on relaxation and quiet activities.",
+    "Determines how much control the patient feels they have over their tinnitus.",
+    "Assesses the extent to which tinnitus interferes with sleep."
+  )
+)
+
+
+
+```
+
+```{r}
+# Create sentence embeddings for all TFI items
+
+# tfi_embeddings <- textEmbed(
+#   texts = tfi_data$QuestionText,  # Full TFI question text
+#   aggregation_from_layers_to_tokens = "mean",  # Aggregate across layers
+#   aggregation_from_tokens_to_texts = "mean",  # Aggregate all token embeddings to one per question
+#   keep_token_embeddings = FALSE  # Only store full sentence embeddings
+# )
+
+# saveRDS(tfi_embeddings$texts, "TFI_Embeddings_Sentences.rds")
+```
+
+# ISS plots for each TFI item
+
+```{r}
+# Load Precomputed TFI Item Embeddings for whole sentences
+tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
+tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
+
+# # Initialize an empty dataframe
+# similarity_results <- data.frame(
+#   Question1 = character(),
+#   Domain1 = character(),
+#   Question2 = character(),
+#   Domain2 = character(),
+#   Similarity = numeric(),
+#   stringsAsFactors = FALSE
+# )
+#
+# # Loop through each question to compute similarity
+# for (i in 1:(nrow(tfi_embeddings_texts_df) - 1)) {
+#   for (j in (i + 1):nrow(tfi_embeddings_texts_df)) {
+#
+#     # Compute similarity between Question i and Question j
+#     similarity_score <- textSimilarity(
+#       x = tfi_embeddings_texts_df[i, , drop = FALSE],  # Question i
+#       y = tfi_embeddings_texts_df[j, , drop = FALSE],  # Question j
+#       method = "cosine"
+#     )
+#
+#     # Store results in dataframe with domain information
+#     similarity_results <- rbind(similarity_results, data.frame(
+#       Question1 = tfi_data$QuestionText[i],
+#       Domain1 = tfi_data$IntendedDomain[i],
+#       Question2 = tfi_data$QuestionText[j],
+#       Domain2 = tfi_data$IntendedDomain[j],
+#       Similarity = similarity_score
+#     ))
+#   }
+# }
+
+
+# # Add a column indicating if the domains match
+# similarity_results <- similarity_results %>%
+#   mutate(SameDomain = ifelse(Domain1 == Domain2, "Within-Domain", "Cross-Domain"))
+#
+# # Compute pairwise theta transformations
+# similarity_results <- similarity_results %>%
+#   mutate(
+#     Theta = acos(pmin(1, abs(Similarity))) * (180 / pi)  # Convert to degrees
+#   )
+#
+# # Create reversed pairs to ensure every question has a full comparison
+# similarity_results_expanded <- similarity_results %>%
+#   rename(Original_Question1 = Question1, Original_Domain1 = Domain1,
+#          Original_Question2 = Question2, Original_Domain2 = Domain2) %>%
+#   bind_rows(
+#     similarity_results %>%
+#       rename(Original_Question1 = Question2, Original_Domain1 = Domain2,
+#              Original_Question2 = Question1, Original_Domain2 = Domain1)
+#   ) %>%
+#   rename(Question1 = Original_Question1, Domain1 = Original_Domain1,
+#          Question2 = Original_Question2, Domain2 = Original_Domain2)
+#
+# # Ensure Question2 is treated as a factor with full levels
+# similarity_results_expanded$Question2 <- factor(similarity_results_expanded$Question2, levels = unique(similarity_results_expanded$Question2))
+#
+#
+#
+# # Merge TFI item numbers for both Question1 and Question2
+# similarity_results_expanded <- similarity_results_expanded %>%
+#   left_join(tfi_data %>% select(QuestionID, QuestionText), by = c("Question1" = "QuestionText")) %>%
+#   rename(QuestionID1 = QuestionID) %>%
+#   left_join(tfi_data %>% select(QuestionID, QuestionText), by = c("Question2" = "QuestionText")) %>%
+#   rename(QuestionID2 = QuestionID)
+
+# write.csv(similarity_results_expanded, "tfi_items_semantic_similarity.csv", row.names = FALSE)
+```
+
+```{r}
+
+similarity_results_expanded <- read.csv("tfi_items_semantic_similarity.csv")
+
+# Ensure Question2 is a factor with item numbers in labels
+similarity_results_expanded$Question2 <- factor(
+  paste0("(", similarity_results_expanded$QuestionID2, ") ", similarity_results_expanded$Question2),
+  levels = unique(paste0("(", similarity_results_expanded$QuestionID2, ") ", similarity_results_expanded$Question2))
+)
+
+for (target_item in unique(similarity_results_expanded$Question1)) {
+  # Get the item number for the focal item
+  target_item_id <- similarity_results_expanded$QuestionID1[similarity_results_expanded$Question1 == target_item][1]
+
+  # Wrap the title for readability
+  wrapped_title <- str_wrap(paste0("Semantic Similarity for Item ", target_item_id, ": ", target_item), width = 60)
+
+  # Filter dataset for the current TFI item and order by ascending Theta (smallest at bottom)
+  similarity_results_item <- similarity_results_expanded %>%
+    filter(Question1 == target_item) %>%
+    mutate(Comparator_Domain = Domain2) %>%
+    arrange(Theta) # Ensures smallest Theta is at the bottom
+
+  # Compute mean within-domain and cross-domain theta values
+  mean_within_theta <- mean(similarity_results_item$Theta[similarity_results_item$SameDomain == "Within-Domain"], na.rm = TRUE)
+  mean_cross_theta <- mean(similarity_results_item$Theta[similarity_results_item$SameDomain == "Cross-Domain"], na.rm = TRUE)
+
+  # Extract the domain of the target item
+  target_item_domain <- unique(similarity_results_item$Domain1)[1]
+
+  # Ensure Question2 is treated as a factor in the correct order
+  similarity_results_item$Question2 <- factor(similarity_results_item$Question2, levels = similarity_results_item$Question2)
+
+  # Manually structured subtitle (avoids overwriting line breaks)
+  subtitle_text <- paste(
+    "Item Domain:", target_item_domain, "\n",
+    "Dashed Lines: Black = Mean Within-Domain Theta, Grey = Mean Cross-Domain Theta", "\n",
+    "0 = Perfectly Similar, 90 = Perfectly Dissimilar"
+  )
+
+  # Generate the plot
+  plot <- ggplot(similarity_results_item, aes(y = Question2, x = Theta, color = Comparator_Domain)) +
+    geom_point(size = 4, alpha = 0.8) +
+    geom_vline(xintercept = mean_within_theta, linetype = "dashed", color = "black", size = 1.2, alpha = 0.7) +
+    geom_vline(xintercept = mean_cross_theta, linetype = "dashed", color = "grey", size = 1.2, alpha = 0.6) +
+    scale_color_viridis_d(option = "H") +
+    scale_x_continuous(breaks = seq(0, 90, by = 5)) +
+    theme_minimal() +
+    labs(
+      title = wrapped_title,
+      subtitle = subtitle_text, # Manually structured with line breaks
+      x = "Theta (Degrees)",
+      y = "Comparator TFI Item",
+      color = "Comparator Domain"
+    ) +
+    theme(axis.text.y = element_text(size = 16), legend.position = "bottom") +
+    coord_cartesian(xlim = c(0, 90))
+
+  # Display plot
+  print(plot)
+}
+
+```
