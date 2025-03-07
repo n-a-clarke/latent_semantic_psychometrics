@@ -1,0 +1,192 @@
+---
+title: "Latent Semantic Psychometrics: Item Embedding Semantic Dimensionality"
+author: "Nathan Clarke"
+date: "2025-02-28"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+---
+
+# Background
+
+Item embedding semantic dimensionality (IESD) evaluates the dimensionality of item embeddings for questionnaire items.  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 20, fig.height = 15, dpi = 150, eval = TRUE)
+
+
+library(text)       # Primary package for advanced text-based NLP.
+library(dplyr)      # Data manipulation
+library(ggplot2)    # Visualization
+library(tidyr)      # Data restructuring
+library(stringr)    # String operations
+library(tidytext)   # Text processing
+library(viridis)    # Color palettes
+library(EGAnet)  # EGA package for network analysis
+
+# 1. CREATE THE COMPLETE TFI DATASET (ALL 25 ITEMS) ----
+
+tfi_data <- data.frame(
+  QuestionID = 1:25,
+  QuestionText = c(
+    # Intrusive (I)
+    "What percentage of your time awake were you consciously aware of your tinnitus?",
+    "How strong or loud was your tinnitus?",
+    "What percentage of your time awake were you annoyed by your tinnitus?",
+
+    # Sense of Control (SC)
+    "Did you feel in control in regard to your tinnitus?",
+    "How easy was it for you to cope with your tinnitus?",
+    "How easy was it for you to ignore your tinnitus?",
+
+    # Cognitive (C)
+    "How much did your tinnitus interfere with your ability to concentrate?",
+    "How much did your tinnitus interfere with your ability to think clearly?",
+    "How much did your tinnitus interfere with your ability to focus attention on other things besides your tinnitus?",
+
+    # Sleep (SL)
+    "How often did your tinnitus make it difficult to fall asleep or stay asleep?",
+    "How often did your tinnitus cause you difficulty in getting as much sleep as you needed?",
+    "How much of the time did your tinnitus keep you from sleeping as deeply or as peacefully as you would have liked?",
+
+    # Auditory (A)
+    "How much has your tinnitus interfered with your ability to hear clearly?",
+    "How much has your tinnitus interfered with your ability to understand people who are talking?",
+    "How much has your tinnitus interfered with your ability to follow conversations in a group or at meetings?",
+
+    # Relaxation (R)
+    "How much has your tinnitus interfered with your quiet resting activities?",
+    "How much has your tinnitus interfered with your ability to relax?",
+    "How much has your tinnitus interfered with your ability to enjoy peace and quiet?",
+
+    # Quality of Life (Q)
+    "How much has your tinnitus interfered with your enjoyment of social activities?",
+    "How much has your tinnitus interfered with your enjoyment of life?",
+    "How much has your tinnitus interfered with your relationships with family, friends, and other people?",
+    "How often did your tinnitus cause you difficulty performing your work or other tasks, such as home maintenance, schoolwork, or caring for children or others?",
+
+    # Emotional (E)
+    "How anxious or worried has your tinnitus made you feel?",
+    "How bothered or upset have you been because of your tinnitus?",
+    "How depressed were you because of your tinnitus?"
+  ),
+  IntendedDomain = c(
+    rep("Intrusive", 3),
+    rep("Sense of Control", 3),
+    rep("Cognitive", 3),
+    rep("Sleep", 3),
+    rep("Auditory", 3),
+    rep("Relaxation", 3),
+    rep("Quality of Life", 4),
+    rep("Emotional", 3)
+  ),
+  stringsAsFactors = FALSE
+)
+
+candidate_domains <- c(
+  "Intrusive", "Sense of Control", "Cognitive", "Sleep",
+  "Auditory", "Relaxation", "Quality of Life", "Emotional"
+)
+
+tfi_domains <- tibble(
+  Domain = c(
+    "Auditory", "Cognitive", "Emotional", "Intrusive",
+    "Quality of Life", "Relaxation", "Sense of Control", "Sleep"
+  ),
+  Definition = c(
+    "Evaluates problems hearing clearly due to tinnitus.",
+    "Captures difficulties in concentration and cognitive tasks due to tinnitus.",
+    "Evaluates the emotional distress caused by tinnitus (e.g., anxiety, frustration, depression).",
+    "Measures how much the tinnitus intrudes on consciousness and daily life.",
+    "Measures the effect of tinnitus on overall enjoyment and engagement in life activities.",
+    "Examines the impact of tinnitus on relaxation and quiet activities.",
+    "Determines how much control the patient feels they have over their tinnitus.",
+    "Assesses the extent to which tinnitus interferes with sleep."
+  )
+)
+
+```
+```{r}
+# Create sentence embeddings for all TFI items
+
+# tfi_embeddings <- textEmbed(
+#   texts = tfi_data$QuestionText,  # Full TFI question text
+#   aggregation_from_layers_to_tokens = "mean",  # Aggregate across layers
+#   aggregation_from_tokens_to_texts = "mean",  # Aggregate all token embeddings to one per question
+#   keep_token_embeddings = FALSE  # Only store full sentence embeddings
+# )
+
+# saveRDS(tfi_embeddings$texts, "TFI_Embeddings_Sentences.rds")
+```
+
+## Principal components analysis (PCA)
+```{r}
+# ==================================================
+# 8a. Embedding Dimensionality: PCA ----
+# ==================================================
+
+tfi_embeddings_texts_df <- readRDS("TFI_Embeddings_Sentences.rds")
+
+tfi_embeddings_texts_df <- as.data.frame(tfi_embeddings_texts_df$texts)
+
+items <- as.data.frame(t(tfi_embeddings_texts_df)) # Transpose: Dimensions → Rows, Items → Columns
+
+# Perform PCA on transposed data
+pca_result <- prcomp(items, center = TRUE, scale. = TRUE)
+
+# Extract the eigenvalues from the PCA object
+eigenvalues <- pca_result$sdev^2
+
+# Determine y-axis limits based on max eigenvalue (rounded up)
+y_max <- ceiling(max(eigenvalues))
+
+# Create a scree plot
+plot(eigenvalues,
+  type = "b", pch = 19, col = "blue",
+  xlab = "Principal Component",
+  ylab = "Eigenvalue",
+  main = "Scree Plot of PCA Eigenvalues",
+  xaxt = "n", yaxt = "n", # Remove default axis ticks
+  ylim = c(0, y_max)
+) # Set y-axis limits
+
+# Manually add x-axis ticks for all 25 principal components
+axis(1, at = 1:25, labels = 1:25, las = 2) # `las = 2` rotates labels vertically
+
+# Manually add y-axis ticks at every whole number eigenvalue
+axis(2, at = seq(0, y_max, by = 1), labels = seq(0, y_max, by = 1))
+
+# Add a horizontal line at y = 1
+abline(h = 1, col = "red", lty = 2, lwd = 2) # Dashed red line
+```
+
+## Exploratory graph analysis (EGA)
+
+```{r}
+
+# 8b. Embedding Dimensionality: EGA ----
+
+# ✅ Run Exploratory Graph Analysis (EGA)
+ega_result <- EGA(items,
+  model = "TMFG", seed = 99, type = "parametric",
+  algorithm = "leiden", na.data = "pairwise", uni.method = "louvain"
+) # Graphical LASSO model
+
+
+# ✅ Visualize the EGA Network
+plot(ega_result, title = "EGA Embeddings Dimensionality of TFI Items")
+
+# ✅ Print Summary
+summary(ega_result)
+
+
+# ✅ Run Exploratory Graph Analysis (EGA)
+ega_result <- EGA(items, model = "glasso") # Graphical LASSO model
+
+bootstrapped_ega <- bootEGA(items,
+  model = "TMFG", iter = 500, seed = 99, type = "parametric",
+  algorithm = "leiden", na.data = "pairwise", uni.method = "louvain"
+)
+```
+

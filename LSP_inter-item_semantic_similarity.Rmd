@@ -10,7 +10,7 @@ output:
 
 # Background
 
-Inter-item semantic similarity (ISS) is a psychometric technique that quantifies the semantic similarity between item embeddings in a questionnaire. This technique is particularly useful in the context of health-related quality of life (HRQoL) questionnaires, where items are often designed to measure similar constructs. By quantifying the semantic similarity between items, researchers can gain insights into the underlying structure of the questionnaire and identify potential redundancies or overlaps between items.
+Inter-item semantic similarity (SS) quantifies the semantic similarity between item embeddings for questionnaire items. Inter-item SS is particularly useful in the context of health-related quality of life (HRQoL) questionnaires, where items are often designed to measure similar constructs. By quantifying the semantic similarity between items, researchers can gain insights into the underlying structure of the questionnaire and identify potential redundancies or overlaps between items.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.width = 20, fig.height = 15, dpi = 150, eval = TRUE)
